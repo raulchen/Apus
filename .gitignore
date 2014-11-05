@@ -16,6 +16,9 @@ project/plugins/project/
 .scala_dependencies
 .worksheet
 
+# Intellij IDEA
+.idea/
+
 # =========================
 # Operating System Files
 # =========================
@@ -28,7 +31,8 @@ project/plugins/project/
 .LSOverride
 
 # Icon must ends with two \r.
-Icon
+Icon
+
 
 # Thumbnails
 ._*
