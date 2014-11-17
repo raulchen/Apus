@@ -1,7 +1,7 @@
 package apus
 
 /**
- * Created by chenhao on 2014/11/5.
+ * Created by Hao Chen on 2014/11/5.
  */
 object Main {
 

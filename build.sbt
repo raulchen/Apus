@@ -3,8 +3,9 @@ import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 
 val akkaVersion = "2.3.6"
 
+
 val project = Project(
-  id = "apus",
+  id = "Apus",
   base = file("."),
   settings = Project.defaultSettings ++ SbtMultiJvm.multiJvmSettings ++ Seq(
     name := """apus""",
@@ -16,7 +17,10 @@ val project = Project(
       "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
       "com.typesafe.akka" %% "akka-contrib" % akkaVersion,
       "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion,
+      "org.scala-lang.modules" %% "scala-xml" % "1.0.2",
       "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+      "io.netty" % "netty-all" % "4.0.24.Final",
+      "com.fasterxml" % "aalto-xml" % "0.9.8",
       "org.fusesource" % "sigar" % "1.6.4"),
     javaOptions in run ++= Seq(
       "-Djava.library.path=./sigar",

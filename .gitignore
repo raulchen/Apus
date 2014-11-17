@@ -59,3 +59,6 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+
+src/main/scala/TempTest.sc
+src/test/scala/TempTest.scala
