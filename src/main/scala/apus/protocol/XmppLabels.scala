@@ -5,5 +5,13 @@ package apus.protocol
  */
 object XmppLabels {
 
-  val stream = "stream"
+  val STREAM = "stream"
+
+  val STARTSSL = "startssl"
+
+  val IQ = "iq"
+
+  val PRESENCE = "presence"
+
+  val MESSAGE = "message"
 }

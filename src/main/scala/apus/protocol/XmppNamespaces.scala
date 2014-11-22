@@ -33,6 +33,8 @@ object XmppNamespaces {
 
   val BIND = "urn:ietf:params:xml:ns:xmpp-bind"
 
+  val TLS = "urn:ietf:params:xml:ns:xmpp-tls"
+
   val SASL = "urn:ietf:params:xml:ns:xmpp-sasl"
 
   val STREAM = "http://etherx.jabber.org/streams"

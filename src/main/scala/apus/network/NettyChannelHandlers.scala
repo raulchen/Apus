@@ -83,10 +83,10 @@ class StreamHandler extends SimpleChannelInboundHandler[XMLEvent]{
   }
 
   private def isStreamHead(event: StartElement):Boolean ={
-    if(XmppLabels.stream == event.getName.getLocalPart){
-      val namepspace = event.getNamespaceURI("")
-      if(XmppNamespaces.SERVER == namepspace ||
-          XmppNamespaces.CLIENT == namepspace){
+    if(XmppLabels.STREAM == event.getName.getLocalPart){
+      val namespace = event.getNamespaceURI("")
+      if(XmppNamespaces.SERVER == namespace ||
+          XmppNamespaces.CLIENT == namespace){
         true
       }
     }
@@ -103,6 +103,7 @@ class StreamHandler extends SimpleChannelInboundHandler[XMLEvent]{
       buf.reset
       return
     }
+    ctx.channel().closeFuture()
 
     if(event.isStartElement){
       depth+=1
