@@ -5,12 +5,13 @@ import javax.net.ssl
 import javax.net.ssl.{ SSLSocket, SSLSocketFactory}
 
 import apus.network.TcpEndpoint
+import apus.server.DefaultXmppServer
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.{ChannelFuture, ChannelHandlerContext, SimpleChannelInboundHandler, ChannelInitializer}
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioSocketChannel
-import io.netty.handler.codec.LineBasedFrameDecoder
+import io.netty.handler.codec.{FixedLengthFrameDecoder, LineBasedFrameDecoder}
 import io.netty.handler.codec.string.{StringEncoder, StringDecoder}
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.util.{InsecureTrustManagerFactory, SelfSignedCertificate}
@@ -23,12 +24,8 @@ import scala.util.control.Breaks
  */
 object TcpServer extends App{
 
-//  System.setProperty("javax.net.ssl.keyStore","mySrvKeystore");
-//  System.setProperty("javax.net.ssl.keyStorePassword","111111");
+  DefaultXmppServer.startUp
 
-  val ssc = new SelfSignedCertificate()
-  val sslContext = SslContext.newServerContext(ssc.certificate(), ssc.privateKey())
-  new TcpEndpoint(23333, sslContext).start()
 }
 
 object TcpClient{
@@ -46,8 +43,8 @@ object TcpClient{
         .handler(new ChannelInitializer[SocketChannel]() {
           override def initChannel(ch: SocketChannel): Unit = {
             val pipeline = ch.pipeline()
-            pipeline.addLast(sslContext.newHandler(ch.alloc(),"localhost",23333))
-            pipeline.addLast(new LineBasedFrameDecoder(1024))
+            pipeline.addLast(sslContext.newHandler(ch.alloc(),"localhost",5222))
+            pipeline.addLast(new FixedLengthFrameDecoder(10))
             pipeline.addLast(new StringDecoder())
             pipeline.addLast(new StringEncoder())
 

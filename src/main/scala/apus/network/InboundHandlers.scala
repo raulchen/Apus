@@ -2,18 +2,23 @@ package apus.network
 
 import java.io.ByteArrayOutputStream
 import java.util
-import javax.xml.namespace.QName
 import javax.xml.stream.events.{StartElement, XMLEvent}
 
+import akka.actor.ActorRef
+import akka.event.Logging
 import apus.protocol.{StreamEnd, StreamStart, XmppLabels, XmppNamespaces}
-import com.fasterxml.aalto.{WFCException, AsyncXMLStreamReader}
+import apus.server.ServerConfig
+import apus.session.Session
+import apus.util.Xml
 import com.fasterxml.aalto.evt.EventAllocatorImpl
 import com.fasterxml.aalto.stax.{InputFactoryImpl, OutputFactoryImpl}
+import com.fasterxml.aalto.{AsyncXMLStreamReader, WFCException}
+import com.typesafe.scalalogging.{StrictLogging, LazyLogging}
 import io.netty.buffer.ByteBuf
-import io.netty.channel.{SimpleChannelInboundHandler, ChannelHandlerContext}
-import io.netty.handler.codec.{ByteToMessageDecoder, MessageToMessageDecoder}
+import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
+import io.netty.handler.codec.ByteToMessageDecoder
 
-import scala.xml.XML
+import scala.xml.Elem
 
 /*
  * Created by Hao Chen on 2014/11/15.
@@ -47,7 +52,7 @@ class XmlFrameDecoder extends ByteToMessageDecoder{
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
     cause match {
-      case e:WFCException => ctx.disconnect() //TODO
+      case e:WFCException => ctx.close() //TODO
       case _ => super.exceptionCaught(ctx, cause)
     }
   }
@@ -62,19 +67,23 @@ private object StreamHandler{
 /**
  * handle incoming XMLEvent, and send StreamStart/StreamEnd/Stanzas to Session actor.
  */
-class StreamHandler extends SimpleChannelInboundHandler[XMLEvent]{
+class StreamHandler(config: ServerConfig) extends SimpleChannelInboundHandler[XMLEvent]{
 
   import apus.network.StreamHandler._
 
+  val log = Logging(config.actorSystem.eventStream, this.getClass)
+
   var inStream = false
   var depth = 0
-  val buf = new ByteArrayOutputStream(1024)
-  val writer = xmlOutputFactory.createXMLEventWriter(buf)
+  val buf = new ByteArrayOutputStream(512)
+  var writer = xmlOutputFactory.createXMLEventWriter(buf)
 
+  var session: Option[ActorRef] = None
 
   override def channelActive(ctx: ChannelHandlerContext): Unit = {
     super.channelActive(ctx)
-    //TODO create Actor
+    ctx.writeAndFlush("""<?xml version="1.0" encoding="UTF-8"?>""")
+    session = Some(config.actorSystem.actorOf(Session.props(ctx,config)))
   }
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {
@@ -82,39 +91,44 @@ class StreamHandler extends SimpleChannelInboundHandler[XMLEvent]{
     //TODO
   }
 
-  private def isStreamHead(event: StartElement):Boolean ={
+  private def isStreamHead(event: StartElement): Boolean ={
     if(XmppLabels.STREAM == event.getName.getLocalPart){
       val namespace = event.getNamespaceURI("")
       if(XmppNamespaces.SERVER == namespace ||
           XmppNamespaces.CLIENT == namespace){
-        true
+        return true
       }
     }
-    false
+    return false
   }
 
-  private def emit(msg: Any):Unit = {
+  private def emit(msg: AnyRef): Unit = {
+    log.debug("emit {}", msg)
+    session.foreach( _ ! msg )
+  }
 
+  private def endElem(): Elem ={
+    writer.flush()
+    writer.close()
+    writer = xmlOutputFactory.createXMLEventWriter(buf)
+    val elem = Xml(String.valueOf(buf))
+    buf.reset
+    elem
   }
 
   override def channelRead0(ctx: ChannelHandlerContext, event: XMLEvent): Unit = {
-    if(event.isStartDocument){
-      depth = 0
-      buf.reset
+    if(event.isStartDocument || event.isEndDocument){
       return
     }
-    ctx.channel().closeFuture()
-
     if(event.isStartElement){
-      depth+=1
-      if(depth==1){
-        //begin stream
-        if(isStreamHead(event.asStartElement)){
-          emit(StreamStart)
-        }
+      if(isStreamHead(event.asStartElement)){
+        depth=1
+        emit(StreamStart)
       }
       else{
+        depth+=1
         writer.add(event)
+        //TODO check buf size
       }
     }
     else if(event.isEndElement){
@@ -127,11 +141,12 @@ class StreamHandler extends SimpleChannelInboundHandler[XMLEvent]{
         writer.add(event)
         if(depth==1){
           //emit stanza
-          writer.flush()
-          emit(XML.loadString(buf.toString))
-          buf.reset()
+          emit(endElem())
         }
       }
+    }
+    else{
+      writer.add(event)
     }
   }
 

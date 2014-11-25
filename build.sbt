@@ -17,7 +17,13 @@ val project = Project(
       "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
       "com.typesafe.akka" %% "akka-contrib" % akkaVersion,
       "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion,
+
       "org.scala-lang.modules" %% "scala-xml" % "1.0.2",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
+      "org.slf4j" % "jcl-over-slf4j" % "1.7.0" % "runtime",
+      "org.slf4j" % "slf4j-api" % "1.7.0" % "runtime",
+      "org.slf4j" % "slf4j-log4j12" % "1.7.0" % "runtime",
+
       "org.scalatest" %% "scalatest" % "2.2.1" % "test",
       "io.netty" % "netty-all" % "4.0.24.Final",
       "com.fasterxml" % "aalto-xml" % "0.9.8",

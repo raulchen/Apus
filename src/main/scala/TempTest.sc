@@ -1,8 +1,18 @@
-import scala.xml.Text
-implicit def optStrToOptText(opt: Option[String]) = opt map {
-  Text(_)
+import scala.xml.transform.{RewriteRule, RuleTransformer}
+import scala.xml._
+
+val myXml = <myTag/> % Attribute(None, "name", Text("value"), Null)
+
+val xml = <root><a/><b/><c/></root>
+
+val rr = new RewriteRule {
+  override def transform(n: Node): Seq[Node] = n match {
+    case elem : Elem => elem % Attribute(None, "name", Text("value"), Null) toSeq
+    case other => other
+  }
 }
 
-val checked:Option[String] = Some("hehe")
+val rt = new RuleTransformer(rr)
 
-val xml = <input checked={checked} />
+
+

@@ -21,29 +21,35 @@ import io.netty.util.concurrent.{Future => NFuture, GlobalEventExecutor, Generic
 /**
  * Created by Hao Chen on 2014/11/5.
  */
-class TcpEndpoint(config: ServerConfig) extends Endpoint{
+class TcpEndpoint(port: Int, config: ServerConfig) extends Endpoint{
+
+  val channelInitializer = new ChannelInitializer[SocketChannel]() {
+
+    override def initChannel(ch: SocketChannel): Unit = {
+      val pipeline = ch.pipeline()
+      pipeline.addLast("stringEncoder", new StringEncoder())
+      pipeline.addLast("xmlEncoder", new XmlEncoder)
+
+      pipeline.addLast("xmlFrameDecoder", new XmlFrameDecoder)
+      pipeline.addLast("streamHandler", new StreamHandler(config))
+
+    }
+  }
 
   override def start(): Unit = {
     val bossGroup: EventLoopGroup = new NioEventLoopGroup(1)
     val workerGroup: EventLoopGroup = new NioEventLoopGroup()
 
-    try
+    try {
       val b = new ServerBootstrap()
       b.group(bossGroup, workerGroup)
         .channel(classOf[NioServerSocketChannel])
-        .handler(new LoggingHandler(LogLevel.INFO))
-        .childHandler(new ChannelInitializer[SocketChannel]() {
-            override def initChannel(ch: SocketChannel): Unit = {
-              val pipeline = ch.pipeline()
+        .option(ChannelOption.SO_BACKLOG,Integer.valueOf(1024))
+//        .handler(new LoggingHandler(LogLevel.INFO))
+        .childHandler(channelInitializer)
 
-              pipeline.addLast(new XmlFrameDecoder)
-              pipeline.addLast(new StreamHandler)
-
-            }
-      })
-
-      b.bind(config.port).sync().channel().closeFuture().sync()
-
+      b.bind(port).sync().channel().closeFuture().sync()
+    }
     finally {
       bossGroup.shutdownGracefully()
       workerGroup.shutdownGracefully()

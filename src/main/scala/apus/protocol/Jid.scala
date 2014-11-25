@@ -43,4 +43,17 @@ object Jid{
       case _ => throw new IllegalArgumentException("Jid must be of format [node@]domain[/resource]")
     }
   }
+
+  def apply(jidOpt: Option[String]): Option[Jid] = {
+    jidOpt.map(apply(_))
+  }
+
+  def parse(jid: String): Option[Jid] ={
+    try{
+      Some(apply(jid))
+    }
+    catch {
+      case e => None
+    }
+  }
 }
