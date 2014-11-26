@@ -32,19 +32,19 @@ class Mechanism(val session: Session) extends SessionHandler{
     var (alias, username, password) = (parts(0), parts(1), parts(2))
 
     val config = session.config
-    if(username.contains("@")==false){
+    if(!username.contains("@")){
       username = username + "@" + config.domain
     }
 
     val jid = Jid.parse(username)
     if(jid.isDefined) {
-      setJid(jid.get)
+      setClientJid(jid.get)
       if (config.userAuth.verify(jid.get, password)) {
         reply(ServerResponses.authSuccess)
         return true
       }
       else {
-        false
+        return false
       }
     }
     else{

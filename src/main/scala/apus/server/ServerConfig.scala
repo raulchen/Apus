@@ -1,6 +1,6 @@
 package apus.server
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import apus.auth.UserAuth
 import apus.protocol.Jid
 import io.netty.handler.ssl.SslContext
@@ -16,11 +16,13 @@ trait ServerConfig {
 
   val sslContext: SslContext
 
-  val serverJid = Jid(domain)
+  val serverJid = Jid(domain, false)
 
   val nextSessionId: String
 
   def actorSystem(): ActorSystem
+
+  def router(): ActorRef
 
   def userAuth(): UserAuth
 }

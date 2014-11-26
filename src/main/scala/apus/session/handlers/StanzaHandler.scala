@@ -1,4 +1,4 @@
-package apus.handlers
+package apus.session.handlers
 
 import apus.protocol.Stanza
 

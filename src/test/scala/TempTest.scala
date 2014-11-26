@@ -1,5 +1,5 @@
 
-import apus.protocol.Jid
+import apus.protocol.{Message, Jid}
 import apus.util.Xml
 import com.fasterxml.aalto.{AsyncXMLStreamReader, AsyncXMLInputFactory}
 import com.fasterxml.aalto.evt.EventAllocatorImpl
@@ -7,6 +7,7 @@ import com.fasterxml.aalto.stax.InputFactoryImpl
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.io.{StdIn, Source}
+import scala.xml.XML
 import scala.xml.pull.XMLEventReader
 
 /**
@@ -14,15 +15,23 @@ import scala.xml.pull.XMLEventReader
  */
 object TempTest{
 
-  class A extends LazyLogging{
-    def f(): Unit ={
-      logger.error({println("hehe"); "sfs" })
-    }
+  class A(val x: Int) {
+
+    def x2 = x*x
   }
 
   def main(args: Array[String]) {
-    val a = new A
-    a.f
+    val raw = """<message
+                    to='romeo@example.net'
+                    from='juliet@example.com/balcony'
+                    type='chat'
+                    xml:lang='en'>
+                  <body>Wherefore art thou, Romeo?</body>
+                </message>"""
+    val xml = Xml(raw)
+    val msg = new Message(xml)
+
+    println(msg.copy().body)
   }
 
 }

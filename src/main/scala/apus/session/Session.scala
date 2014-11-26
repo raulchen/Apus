@@ -2,8 +2,13 @@ package apus.session
 
 import java.util.concurrent.ThreadLocalRandom
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import apus.handlers.IqHandler
+import scala.concurrent.duration._
+
+import akka.actor._
+import akka.pattern.{ask, pipe}
+
+import apus.channel.{ReceiveMessage, SessionRegistered, RegisterSession}
+import apus.session.handlers.IqHandler
 import apus.protocol._
 import apus.server.ServerConfig
 import apus.session.auth.Mechanism
@@ -25,9 +30,9 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
 
   var state = INITIALIZED
 
-  var clientJid: Option[Jid] = None
+  val router = config.router
 
-  var userChannel: Option[ActorRef] = None
+  var clientJid: Option[Jid] = None
 
   val mechanism = new Mechanism(this)
 
@@ -36,7 +41,6 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
   @scala.throws[Exception](classOf[Exception])
   override def preStart(): Unit = {
     super.preStart()
-    //TODO find user channel
   }
 
   private def become(newState: SessionState.Value): Unit ={
@@ -47,14 +51,14 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
       case ENCRYPTED => context.become(encrypted)
       case AUTHENTICATED => context.become(authenticated)
       case ENDED => context.become(ended)
-      case _ => throw new AssertionError("invalid session state")
+      case _ => throw new AssertionError(s"invalid session state: $newState")
     }
     state = newState
   }
 
   private def handleStreamStart: Receive = {
     case StreamStart => {
-      reply(ServerResponses.streamOpenerForClient(state,config.serverJid,Some(id)))
+      reply(ServerResponses.streamOpenerForClient(state, config.serverJid, Some(id)))
       state match {
         case INITIALIZED => become(STARTED)
         case ENCRYPTED =>
@@ -67,10 +71,6 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
     reply(ServerResponses.tlsProceed)
     val handler = config.sslContext.newHandler(ctx.channel.alloc())
     ctx.channel.pipeline.addFirst("sslHandler", handler)
-  }
-
-  private def connectToUserChannel(jid: Jid): Unit = {
-    println(jid)
   }
 
   def initialized: Receive = handleStreamStart
@@ -96,8 +96,14 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
       stanza match {
         case iq: Iq => iqHandler.handle(iq)
         case presence: Presence => println(presence)
-        case msg: Message => println(msg)
+        case msg: Message => {
+          router ! new ReceiveMessage(clientJid.get.node, msg)
+        }
+        case _ => log.warning("invalid elem: {}", elem)
       }
+    }
+    case ReceiveMessage(_, msg) => {
+      reply(msg.xml)
     }
   }
 

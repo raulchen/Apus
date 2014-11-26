@@ -1,5 +1,7 @@
 package apus.protocol
 
+import apus.util.XmlUtil
+
 import scala.xml.Elem
 
 /**
@@ -11,18 +13,19 @@ trait Stanza {
 
   def label: String
 
-  val id = attr("id")
+  val idOpt = attr("id")
 
-  val from = Jid(attr("from"))
+  val fromOpt = attr("from").flatMap( Jid.parse(_) )
 
-  val to = Jid(attr("to"))
+  val toOpt = attr("to").flatMap( Jid.parse(_) )
 
   def attr(key: String): Option[String] = {
-    xml.attribute(key).map(_.text)
+    XmlUtil.attr(xml, key)
   }
 
   override def toString: String = xml.toString
 }
+
 
 class UnknownStanza(override val xml: Elem) extends Stanza{
 
@@ -32,10 +35,10 @@ class UnknownStanza(override val xml: Elem) extends Stanza{
 object Stanza{
 
   def apply(xml: Elem): Stanza = {
-    xml.label match {
-      case "iq" => new Iq(xml)
-      case "presence" => new Presence(xml)
-      case "message" => new Message(xml)
+    xml match {
+      case xml: Elem if Iq.verify(xml) => new Iq(xml)
+      case xml: Elem if Presence.verify(xml) => new Presence(xml)
+      case xml: Elem if Message.verify(xml) => new Message(xml)
       case _ => new UnknownStanza(xml)
     }
   }

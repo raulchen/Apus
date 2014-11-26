@@ -52,7 +52,7 @@ class XmlFrameDecoder extends ByteToMessageDecoder{
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
     cause match {
-      case e:WFCException => ctx.close() //TODO
+      case e: WFCException => ctx.close() //TODO
       case _ => super.exceptionCaught(ctx, cause)
     }
   }
