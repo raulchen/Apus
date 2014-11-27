@@ -13,7 +13,6 @@ import apus.util.Xml
 import com.fasterxml.aalto.evt.EventAllocatorImpl
 import com.fasterxml.aalto.stax.{InputFactoryImpl, OutputFactoryImpl}
 import com.fasterxml.aalto.{AsyncXMLStreamReader, WFCException}
-import com.typesafe.scalalogging.{StrictLogging, LazyLogging}
 import io.netty.buffer.ByteBuf
 import io.netty.channel.{ChannelInboundHandlerAdapter, ChannelHandlerContext, SimpleChannelInboundHandler}
 import io.netty.handler.codec.ByteToMessageDecoder

@@ -8,7 +8,6 @@ import apus.util.Xml
 import com.fasterxml.aalto.{AsyncXMLStreamReader, AsyncXMLInputFactory}
 import com.fasterxml.aalto.evt.EventAllocatorImpl
 import com.fasterxml.aalto.stax.InputFactoryImpl
-import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.JavaConverters._
 import scala.io.{StdIn, Source}

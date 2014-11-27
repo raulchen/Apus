@@ -42,7 +42,7 @@ object DefaultXmppServer extends XmppServer{
     override val userAuth = MockUserAuth
   }
 
-  val actorSystem = ActorSystem("Apus")
+  val actorSystem = ActorSystem("apus")
 
   val router = actorSystem.actorOf(Props(classOf[UserChannelRouter]), "router")
 
@@ -57,6 +57,7 @@ object DefaultXmppServer extends XmppServer{
 
   override def shutDown(): Unit = {
     endPoints.foreach( _.shutdown() )
+    actorSystem.shutdown()
     log.info("Server stopped")
   }
 }

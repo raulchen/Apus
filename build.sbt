@@ -3,34 +3,35 @@ import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 
 val akkaVersion = "2.3.6"
 
+val dependencies = Seq(
+  //========= Scala
+  "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
+  "com.typesafe.akka" %% "akka-contrib" % akkaVersion,
+  "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion,
+  "org.scala-lang.modules" %% "scala-xml" % "1.0.2",
+  //========= Java
+  "io.netty" % "netty-all" % "4.0.24.Final",
+  "com.fasterxml" % "aalto-xml" % "0.9.8",
+  "org.fusesource" % "sigar" % "1.6.4",
+  //======== Test
+  "org.scalatest" %% "scalatest" % "2.2.1" % "test"
+)
+
+val scalaCompileOptions = Seq("-encoding", "UTF-8", "-target:jvm-1.6", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint")
+val javaCompileOptions = Seq("-source", "1.6", "-target", "1.6", "-Xlint:unchecked", "-Xlint:deprecation")
+val javaRunOptions = Seq("-Djava.library.path=./sigar", "-Xms128m", "-Xmx1024m")
 
 val project = Project(
-  id = "Apus",
+  id = "apus",
   base = file("."),
   settings = Project.defaultSettings ++ SbtMultiJvm.multiJvmSettings ++ Seq(
     name := """apus""",
     version := "1.0-SNAPSHOT",
     scalaVersion := "2.11.2",
-    scalacOptions in Compile ++= Seq("-encoding", "UTF-8", "-target:jvm-1.6", "-deprecation", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint"),
-    javacOptions in Compile ++= Seq("-source", "1.6", "-target", "1.6", "-Xlint:unchecked", "-Xlint:deprecation"),
-    libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
-      "com.typesafe.akka" %% "akka-contrib" % akkaVersion,
-      "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion,
-
-      "org.scala-lang.modules" %% "scala-xml" % "1.0.2",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
-      "org.slf4j" % "jcl-over-slf4j" % "1.7.0" % "runtime",
-      "org.slf4j" % "slf4j-api" % "1.7.0" % "runtime",
-      "org.slf4j" % "slf4j-log4j12" % "1.7.0" % "runtime",
-
-      "org.scalatest" %% "scalatest" % "2.2.1" % "test",
-      "io.netty" % "netty-all" % "4.0.24.Final",
-      "com.fasterxml" % "aalto-xml" % "0.9.8",
-      "org.fusesource" % "sigar" % "1.6.4"),
-    javaOptions in run ++= Seq(
-      "-Djava.library.path=./sigar",
-      "-Xms128m", "-Xmx1024m"),
+    scalacOptions in Compile ++= scalaCompileOptions,
+    javacOptions in Compile ++= javaCompileOptions,
+    libraryDependencies ++= dependencies,
+    javaOptions in run ++= javaRunOptions,
     Keys.fork in run := true,  
     mainClass in (Compile, run) := Some("apus.Main"),
     // make sure that MultiJvm test are compiled by the default test compilation

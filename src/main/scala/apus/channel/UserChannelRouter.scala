@@ -1,6 +1,6 @@
 package apus.channel
 
-import akka.actor.{Terminated, ActorRef, Actor}
+import akka.actor.{SupervisorStrategy, Terminated, ActorRef, Actor}
 import akka.actor.Actor.Receive
 import apus.util.BiMap
 
@@ -8,6 +8,9 @@ import apus.util.BiMap
  * Created by Hao Chen on 2014/11/26.
  */
 class UserChannelRouter extends Actor{
+
+
+  override def supervisorStrategy: SupervisorStrategy = super.supervisorStrategy
 
   var channelMap = new BiMap[String, ActorRef]
 

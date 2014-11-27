@@ -1,6 +1,7 @@
 package apus.util
 
 import scala.xml.{Elem, Text}
+import scala.language.implicitConversions
 
 /**
  * Some implicit conversions for xml manipulation
