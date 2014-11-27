@@ -1,6 +1,7 @@
 package apus.protocol
 
 /**
+ * Namespace constants.
  * Created by Hao Chen on 2014/11/15.
  */
 object XmppNamespaces {

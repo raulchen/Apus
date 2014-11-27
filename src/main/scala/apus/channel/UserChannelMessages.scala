@@ -15,7 +15,7 @@ trait UserChannelMessage extends ConsistentHashable{
   override def consistentHashKey: Any = userId
 }
 
-case class RegisterSession(userJid: Jid) extends UserChannelMessage{
+case class RegisterSession(session:ActorRef, userJid: Jid) extends UserChannelMessage{
 
   def userId = userJid.node
 }

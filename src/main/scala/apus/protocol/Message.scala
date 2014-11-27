@@ -3,6 +3,7 @@ package apus.protocol
 import scala.xml.{Text, Null, UnprefixedAttribute, Elem}
 
 /**
+ * A Message stanza.
  * Created by Hao Chen on 2014/11/24.
  */
 class Message(override val xml: Elem) extends Stanza{
@@ -51,7 +52,9 @@ object MessageType extends Enumeration{
   val Headline = Value("headline")
   val Error = Value("error")
 
-  def apply(str: String): Value = values.find( _.toString == str.toLowerCase ).getOrElse(Chat)
+  def apply(str: String): Value = {
+    values.find( _.toString == str.toLowerCase ).getOrElse(Chat)
+  }
 
-  def apply(strOpt: Option[String]): Value = strOpt.map(apply(_)).get
+  def apply(strOpt: Option[String]): Value = apply(strOpt.orNull)
 }

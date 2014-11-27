@@ -7,7 +7,11 @@ import java.util.UUID
  */
 class UuidGenerator {
 
+  /**
+   * generate an UUID String without dashes
+   * @return
+   */
   def next(): String = {
-    UUID.randomUUID.toString.replaceAllLiterally("-","")
+    UUID.randomUUID.toString.replaceAllLiterally("-", "")
   }
 }

@@ -16,12 +16,14 @@ object ServerResponses {
 
   def streamOpenerForClient(state: SessionState.Value, from: Jid, sessionId: Option[String]): Elem ={
     val innerNodes = state match{
-      case SessionState.INITIALIZED => featuresForEncryption()
-      case SessionState.ENCRYPTED => featuresForAuthentication()
-      case SessionState.AUTHENTICATED => featuresForSession() //TODO sessionContext.setIsReopeningXMLStream();
+      case SessionState.INITIALIZED => featuresForEncryption
+      case SessionState.ENCRYPTED => featuresForAuthentication
+      case SessionState.AUTHENTICATED => featuresForSession //TODO sessionContext.setIsReopeningXMLStream();
     }
 
-    <stream:stream xmlns={CLIENT} xmlns:stream={STREAM} from={from.toString} version="1.0" id={sessionId}>{innerNodes}</stream:stream>
+    <stream:stream xmlns={CLIENT} xmlns:stream={STREAM} from={from.toString} version="1.0" id={sessionId}>
+      {innerNodes}
+    </stream:stream>
   }
 
   //============== FEATURES ==============
@@ -32,19 +34,25 @@ object ServerResponses {
     </stream:features>
   }
 
-  def featuresForEncryption(): Elem = {
+  val featuresForEncryption: Elem = {
     features(
-      <starttls xmlns={TLS}><required/></starttls>
+      <starttls xmlns={TLS}>
+        <required/>
+      </starttls>
     )
   }
 
-  def featuresForAuthentication(): Elem = {
+  val featuresForAuthentication: Elem = {
     features(
-      <mechanisms xmlns={SASL}><mechanism>{SaslMechanism.Plain}</mechanism></mechanisms>
+      <mechanisms xmlns={SASL}>
+        <mechanism>
+          {SaslMechanism.Plain}
+        </mechanism>
+      </mechanisms>
     )
   }
 
-  def featuresForSession(): Elem = {
+  val featuresForSession: Elem = {
     features(
       <bind xmlns={BIND}><required/></bind>
       <session xmlns={SESSION}><required/></session>
@@ -53,21 +61,21 @@ object ServerResponses {
 
   //============ TLS ================
 
-  def tlsProceed(): Elem = {
+  val tlsProceed: Elem = {
     <proceed xmlns={TLS}></proceed>
   }
 
   //============ Auth =================
 
-  def authSuccess(): Elem = {
+  val authSuccess: Elem = {
     <success xmlns={SASL}></success>
   }
 
-  def authFailureNotAuthorized(): Elem = {
+  val authFailureNotAuthorized: Elem = {
     <failure xmlns={SASL}><not-authorized xmlns={SASL}/></failure>
   }
 
-  def authFailureMalformedRequest(): Elem = {
+  val authFailureMalformedRequest: Elem = {
     <failure xmlns={SASL}><malformed-request xmlns={SASL}/></failure>
   }
 

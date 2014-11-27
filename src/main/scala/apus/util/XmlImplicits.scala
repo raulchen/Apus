@@ -3,6 +3,7 @@ package apus.util
 import scala.xml.{Elem, Text}
 
 /**
+ * Some implicit conversions for xml manipulation
  * Created by Hao Chen on 2014/11/19.
  */
 object XmlImplicits {

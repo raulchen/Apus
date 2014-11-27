@@ -17,6 +17,7 @@ import io.netty.channel.ChannelHandlerContext
 import scala.xml.Elem
 
 /**
+ * The session actor.
  * Created by Hao Chen on 2014/11/17.
  */
 class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends Actor
@@ -30,7 +31,7 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
 
   var state = INITIALIZED
 
-  val router = config.router
+  val router = config.router()
 
   var clientJid: Option[Jid] = None
 
@@ -43,6 +44,10 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
     super.preStart()
   }
 
+  /**
+   * become a new state
+   * @param newState
+   */
   private def become(newState: SessionState.Value): Unit ={
     log.debug("becoming {}.", newState.toString)
     newState match {
@@ -50,7 +55,7 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
       case STARTED => context.become(started)
       case ENCRYPTED => context.become(encrypted)
       case AUTHENTICATED => context.become(authenticated)
-      case ENDED => context.become(ended)
+//      case ENDED => context.become(ended)
       case _ => throw new AssertionError(s"invalid session state: $newState")
     }
     state = newState
@@ -67,17 +72,21 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
     }
   }
 
+  def initialized: Receive = handleStreamStart
+
+  /**
+   * make this channel encrypted
+   */
   private def switchToTls(): Unit = {
-    reply(ServerResponses.tlsProceed)
+
     val handler = config.sslContext.newHandler(ctx.channel.alloc())
     ctx.channel.pipeline.addFirst("sslHandler", handler)
   }
 
-  def initialized: Receive = handleStreamStart
-
   def started: Receive = {
     case elem @ <starttls /> if elem.namespace == XmppNamespaces.TLS => {
-      switchToTls
+      reply(ServerResponses.tlsProceed)
+      switchToTls()
       become(ENCRYPTED)
     }
   }
@@ -97,9 +106,13 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
         case iq: Iq => iqHandler.handle(iq)
         case presence: Presence => println(presence)
         case msg: Message => {
-          router ! new ReceiveMessage(clientJid.get.node, msg)
+          var m = msg
+          if(m.fromOpt.isDefined == false){
+            m = m.copy(from = clientJid)
+          }
+          router ! new ReceiveMessage(m.to.node, msg)
         }
-        case _ => log.warning("invalid elem: {}", elem)
+        case _ => log.warning("invalid stanza: {}", elem)
       }
     }
     case ReceiveMessage(_, msg) => {
@@ -107,9 +120,8 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
     }
   }
 
-  def ended: Receive = ???
-
   override def receive: Receive = initialized
+
 }
 
 object Session {
@@ -121,5 +133,5 @@ object Session {
 
 object SessionState extends Enumeration{
 
-  val INITIALIZED, STARTED, ENCRYPTED, AUTHENTICATED, ENDED = Value
+  val INITIALIZED, STARTED, ENCRYPTED, AUTHENTICATED = Value
 }

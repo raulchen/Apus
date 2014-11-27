@@ -3,6 +3,7 @@ package apus.protocol
 import scala.xml.Elem
 
 /**
+ * An Iq stanza.
  * Created by Hao Chen on 2014/11/24.
  */
 class Iq(override val xml: Elem) extends Stanza{
@@ -45,7 +46,9 @@ object IqType extends Enumeration{
   val Error = Value("error")
   val Unknown = Value("unknown")
 
-  def apply(str: String): Value = values.find( _.toString == str.toLowerCase ).getOrElse(Unknown)
+  def apply(str: String): Value = {
+    values.find( _.toString == str.toLowerCase ).getOrElse(Unknown)
+  }
 
-  def apply(strOpt: Option[String]): Value = strOpt.map(apply(_)).get
+  def apply(strOpt: Option[String]): Value = apply(strOpt.orNull)
 }

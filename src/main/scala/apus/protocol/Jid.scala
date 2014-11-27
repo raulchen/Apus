@@ -2,8 +2,15 @@ package apus.protocol
 
 import scala.util.control.NonFatal
 
-/**
+/*
  * Created by Hao Chen on 2014/11/17.
+ */
+
+/**
+ * The Jabber ID
+ * @param nodeOpt the node part
+ * @param domain the domain part
+ * @param resourceOpt the resource part
  */
 case class Jid(nodeOpt: Option[String],
                domain: String,
@@ -13,6 +20,9 @@ case class Jid(nodeOpt: Option[String],
 
   //  def resource: String = resourceOpt.getOrElse("")
 
+  /**
+   * @return the bare jid without resource part
+   */
   def bare: Jid = {
     if (resourceOpt.isDefined) {
       copy(nodeOpt, domain, None)
@@ -31,19 +41,21 @@ case class Jid(nodeOpt: Option[String],
     resourceOpt.foreach {
       sb.append("/").append(_)
     }
-    sb.toString
+    sb.toString()
   }
 }
 
 object Jid {
 
   private val validChars = "[^@/]+"
-  private val pattern = s"((${validChars})@)?(${validChars})(/(${validChars}))?".r
+  private val pattern = s"(($validChars)@)?($validChars)(/($validChars))?".r
 
   /**
-   * parse string to Jid
+   * Parse a String to Jid.
+   * If the string is not well-formed, An IllegalArgumentException will be thrown.
+   *
    * @param str
-   * @param requireNode
+   * @param requireNode whether this jid must have the node part
    * @return
    */
   def apply(str: String, requireNode: Boolean = true): Jid = {
@@ -58,6 +70,13 @@ object Jid {
     }
   }
 
+  /**
+   * Parse a String to Jid.
+   * Return None if the string is not well-formed.
+   * @param str
+   * @param requireNode whether this jid must have the node part
+   * @return
+   */
   def parse(str: String, requireNode: Boolean = true): Option[Jid] = {
     try {
       if (str == null || str.isEmpty) {

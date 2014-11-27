@@ -1,14 +1,20 @@
 
-import apus.protocol.{Message, Jid}
+import java.io.File
+import java.util
+
+import apus.protocol.{ServerResponses, Message, Jid}
+import apus.session.SessionState
 import apus.util.Xml
 import com.fasterxml.aalto.{AsyncXMLStreamReader, AsyncXMLInputFactory}
 import com.fasterxml.aalto.evt.EventAllocatorImpl
 import com.fasterxml.aalto.stax.InputFactoryImpl
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.collection.JavaConverters._
 import scala.io.{StdIn, Source}
 import scala.xml.XML
 import scala.xml.pull.XMLEventReader
+import scala.concurrent.duration._
 
 /**
  * Created by Hao Chen on 2014/11/15.
@@ -21,17 +27,8 @@ object TempTest{
   }
 
   def main(args: Array[String]) {
-    val raw = """<message
-                    to='romeo@example.net'
-                    from='juliet@example.com/balcony'
-                    type='chat'
-                    xml:lang='en'>
-                  <body>Wherefore art thou, Romeo?</body>
-                </message>"""
-    val xml = Xml(raw)
-    val msg = new Message(xml)
-
-    println(msg.copy().body)
+    val x = ServerResponses.streamOpenerForClient(SessionState.INITIALIZED, Jid("hehe@haha.com"), None)
+    println(x)
   }
 
 }

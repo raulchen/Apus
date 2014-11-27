@@ -9,6 +9,7 @@ import scala.util.Success
 import scala.xml.Elem
 
 /**
+ * Handle Iq stanzas.
  * Created by Hao Chen on 2014/11/24.
  */
 class IqHandler(val session: Session) extends StanzaHandler[Iq] with SessionHandler{

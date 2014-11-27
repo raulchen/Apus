@@ -1,12 +1,12 @@
 package apus.network
 
-import java.io.ByteArrayOutputStream
+import java.io.{IOException, ByteArrayOutputStream}
 import java.util
 import javax.xml.stream.events.{StartElement, XMLEvent}
 
-import akka.actor.ActorRef
+import akka.actor.{PoisonPill, ActorRef}
 import akka.event.Logging
-import apus.protocol.{StreamEnd, StreamStart, XmppLabels, XmppNamespaces}
+import apus.protocol.{StreamStart, XmppNamespaces}
 import apus.server.ServerConfig
 import apus.session.Session
 import apus.util.Xml
@@ -15,7 +15,7 @@ import com.fasterxml.aalto.stax.{InputFactoryImpl, OutputFactoryImpl}
 import com.fasterxml.aalto.{AsyncXMLStreamReader, WFCException}
 import com.typesafe.scalalogging.{StrictLogging, LazyLogging}
 import io.netty.buffer.ByteBuf
-import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
+import io.netty.channel.{ChannelInboundHandlerAdapter, ChannelHandlerContext, SimpleChannelInboundHandler}
 import io.netty.handler.codec.ByteToMessageDecoder
 
 import scala.xml.Elem
@@ -49,13 +49,6 @@ class XmlFrameDecoder extends ByteToMessageDecoder{
       out.add(allocator.allocate(reader))
     }
   }
-
-  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
-    cause match {
-      case e: WFCException => ctx.close() //TODO
-      case _ => super.exceptionCaught(ctx, cause)
-    }
-  }
 }
 
 
@@ -71,28 +64,31 @@ class StreamHandler(config: ServerConfig) extends SimpleChannelInboundHandler[XM
 
   import apus.network.StreamHandler._
 
-  val log = Logging(config.actorSystem.eventStream, this.getClass)
+  val InitialBufSize = 512
+  val MaxBufSizeToTrim = 5 * 1024
+  val MaxSizePerStanza = 20 * 1024
 
-  var inStream = false
+  val log = Logging(config.actorSystem.eventStream, this.getClass.getCanonicalName)
+
   var depth = 0
-  val buf = new ByteArrayOutputStream(512)
+  var buf = new ByteArrayOutputStream(InitialBufSize)
   var writer = xmlOutputFactory.createXMLEventWriter(buf)
 
-  var session: Option[ActorRef] = None
+  var session: ActorRef = null
 
   override def channelActive(ctx: ChannelHandlerContext): Unit = {
-    super.channelActive(ctx)
     ctx.writeAndFlush("""<?xml version="1.0" encoding="UTF-8"?>""")
-    session = Some(config.actorSystem.actorOf(Session.props(ctx,config)))
+    //create session actor
+    session = config.actorSystem.actorOf(Session.props(ctx, config))
   }
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {
-    super.channelInactive(ctx)
-    //TODO
+    //end session actor
+    session ! PoisonPill
   }
 
   private def isStreamHead(event: StartElement): Boolean ={
-    if(XmppLabels.STREAM == event.getName.getLocalPart){
+    if("stream" == event.getName.getLocalPart){
       val namespace = event.getNamespaceURI("")
       if(XmppNamespaces.SERVER == namespace ||
           XmppNamespaces.CLIENT == namespace){
@@ -104,15 +100,21 @@ class StreamHandler(config: ServerConfig) extends SimpleChannelInboundHandler[XM
 
   private def emit(msg: AnyRef): Unit = {
     log.debug("emit {}", msg)
-    session.foreach( _ ! msg )
+    session ! msg
   }
 
   private def endElem(): Elem ={
     writer.flush()
     writer.close()
     writer = xmlOutputFactory.createXMLEventWriter(buf)
+
     val elem = Xml(String.valueOf(buf))
-    buf.reset
+
+    buf.reset()
+    if(buf.size > MaxBufSizeToTrim){
+      buf = new ByteArrayOutputStream(InitialBufSize)
+    }
+
     elem
   }
 
@@ -120,6 +122,7 @@ class StreamHandler(config: ServerConfig) extends SimpleChannelInboundHandler[XM
     if(event.isStartDocument || event.isEndDocument){
       return
     }
+
     if(event.isStartElement){
       if(isStreamHead(event.asStartElement)){
         depth=1
@@ -128,14 +131,16 @@ class StreamHandler(config: ServerConfig) extends SimpleChannelInboundHandler[XM
       else{
         depth+=1
         writer.add(event)
-        //TODO check buf size
+        if(buf.size > MaxSizePerStanza){
+          throw new IOException(s"Stanza too large: ${buf.size}")
+        }
       }
     }
     else if(event.isEndElement){
       depth-=1
       if(depth==0){
         //end stream
-        emit(StreamEnd)
+        ctx.close()
       }
       else{
         writer.add(event)
@@ -150,4 +155,24 @@ class StreamHandler(config: ServerConfig) extends SimpleChannelInboundHandler[XM
     }
   }
 
+}
+
+
+class InboundExceptionHandler(config: ServerConfig) extends ChannelInboundHandlerAdapter{
+
+  val log = Logging(config.actorSystem(), this.getClass.getCanonicalName)
+
+  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
+    cause match {
+      case e: WFCException => {
+        log.warning("invalid xml format from client")
+        ctx.close()
+      }
+      case e: IOException => {
+        log.error("IOException: {}", e.getMessage)
+        ctx.close()
+      }
+      case _ => super.exceptionCaught(ctx, cause)
+    }
+  }
 }

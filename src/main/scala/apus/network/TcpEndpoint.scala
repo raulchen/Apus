@@ -33,11 +33,14 @@ class TcpEndpoint(port: Int, config: ServerConfig) extends Endpoint{
       pipeline.addLast("xmlFrameDecoder", new XmlFrameDecoder)
       pipeline.addLast("streamHandler", new StreamHandler(config))
 
+      pipeline.addLast("exceptionHandler", new InboundExceptionHandler(config))
     }
   }
 
+  var ch: Channel = null
+
   override def start(): Unit = {
-    val bossGroup: EventLoopGroup = new NioEventLoopGroup(1)
+    val bossGroup: EventLoopGroup = new NioEventLoopGroup()
     val workerGroup: EventLoopGroup = new NioEventLoopGroup()
 
     try {
@@ -48,7 +51,7 @@ class TcpEndpoint(port: Int, config: ServerConfig) extends Endpoint{
 //        .handler(new LoggingHandler(LogLevel.INFO))
         .childHandler(channelInitializer)
 
-      b.bind(port).sync().channel().closeFuture().sync()
+      ch = b.bind(port).sync().channel()
     }
     finally {
       bossGroup.shutdownGracefully()
@@ -56,5 +59,7 @@ class TcpEndpoint(port: Int, config: ServerConfig) extends Endpoint{
     }
   }
 
-  override def shutdown(): Unit = ???
+  override def shutdown(): Unit = {
+    ch.close()
+  }
 }

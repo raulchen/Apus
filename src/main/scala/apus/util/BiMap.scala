@@ -1,7 +1,7 @@
 package apus.util
 
 /**
- * Bidirectional map
+ * A bidirectional map
  * Created by Hao Chen on 2014/11/26.
  */
 class BiMap[K, V] {
