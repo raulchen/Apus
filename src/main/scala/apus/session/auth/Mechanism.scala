@@ -31,7 +31,7 @@ class Mechanism(val session: Session) extends SessionHandler{
     }
     var (alias, username, password) = (parts(0), parts(1), parts(2))
 
-    val config = session.config
+    val config = session.runtime
     if(!username.contains("@")){
       username = username + "@" + config.domain
     }

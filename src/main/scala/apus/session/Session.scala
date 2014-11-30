@@ -10,7 +10,7 @@ import akka.pattern.{ask, pipe}
 import apus.channel.{ReceiveMessage, SessionRegistered, RegisterSession}
 import apus.session.handlers.IqHandler
 import apus.protocol._
-import apus.server.ServerConfig
+import apus.server.ServerRuntime
 import apus.session.auth.Mechanism
 import io.netty.channel.ChannelHandlerContext
 
@@ -20,18 +20,18 @@ import scala.xml.Elem
  * The session actor.
  * Created by Hao Chen on 2014/11/17.
  */
-class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends Actor
+class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extends Actor
   with ActorLogging with SessionHandler{
 
   import apus.session.SessionState._
 
   override val session: Session = this
 
-  val id = config.nextSessionId
+  val id = runtime.nextSessionId()
 
   var state = INITIALIZED
 
-  val router = config.router()
+  val router = runtime.router()
 
   var clientJid: Option[Jid] = None
 
@@ -39,10 +39,10 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
 
   val iqHandler = new IqHandler(this)
 
-  @scala.throws[Exception](classOf[Exception])
-  override def preStart(): Unit = {
-    super.preStart()
-  }
+//  @scala.throws[Exception](classOf[Exception])
+//  override def preStart(): Unit = {
+//    super.preStart()
+//  }
 
   /**
    * become a new state
@@ -63,7 +63,7 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
 
   private def handleStreamStart: Receive = {
     case StreamStart => {
-      reply(ServerResponses.streamOpenerForClient(state, config.serverJid, Some(id)))
+      reply(ServerResponses.streamOpenerForClient(state, runtime.serverJid, Some(id)))
       state match {
         case INITIALIZED => become(STARTED)
         case ENCRYPTED =>
@@ -79,7 +79,7 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
    */
   private def switchToTls(): Unit = {
 
-    val handler = config.sslContext.newHandler(ctx.channel.alloc())
+    val handler = runtime.sslContext.newHandler(ctx.channel.alloc())
     ctx.channel.pipeline.addFirst("sslHandler", handler)
   }
 
@@ -104,7 +104,7 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
       val stanza = Stanza(elem)
       stanza match {
         case iq: Iq => iqHandler.handle(iq)
-        case presence: Presence => println(presence)
+        case presence: Presence => //ignore Presence stanza for now
         case msg: Message => {
           var m = msg
           if(m.fromOpt.isDefined == false){
@@ -126,8 +126,8 @@ class Session(val ctx: ChannelHandlerContext, val config: ServerConfig) extends 
 
 object Session {
 
-  def props(ctx: ChannelHandlerContext, config: ServerConfig): Props = {
-    Props(classOf[Session], ctx, config)
+  def props(ctx: ChannelHandlerContext, runtime: ServerRuntime): Props = {
+    Props(classOf[Session], ctx, runtime)
   }
 }
 

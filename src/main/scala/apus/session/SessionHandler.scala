@@ -43,7 +43,7 @@ trait SessionHandler {
   def registerToUserChannel[U](newJid: Jid, completeCallback: Try[Any] => U): Unit ={
     setClientJid(newJid)
 
-    val router = session.config.router
+    val router = session.runtime.router
     val msg = new RegisterSession(session.self, session.clientJid.get)
     val f = ask(router, msg)(3.seconds)
     f.onComplete(completeCallback)(session.context.dispatcher)

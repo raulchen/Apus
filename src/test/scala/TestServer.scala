@@ -1,32 +1,13 @@
-import java.io.{BufferedReader, InputStreamReader, OutputStreamWriter, BufferedWriter}
-import java.net.Socket
-import java.util.Scanner
-import javax.net.ssl
-import javax.net.ssl.{ SSLSocket, SSLSocketFactory}
 
-import apus.network.TcpEndpoint
-import apus.server.DefaultXmppServer
-import io.netty.bootstrap.Bootstrap
-import io.netty.channel.{ChannelFuture, ChannelHandlerContext, SimpleChannelInboundHandler, ChannelInitializer}
-import io.netty.channel.nio.NioEventLoopGroup
-import io.netty.channel.socket.SocketChannel
-import io.netty.channel.socket.nio.NioSocketChannel
-import io.netty.handler.codec.{FixedLengthFrameDecoder, LineBasedFrameDecoder}
-import io.netty.handler.codec.string.{StringEncoder, StringDecoder}
-import io.netty.handler.ssl.SslContext
-import io.netty.handler.ssl.util.{InsecureTrustManagerFactory, SelfSignedCertificate}
-
-import scala.io.StdIn
-import scala.util.control.Breaks
 
 /**
  * Created by Hao Chen on 2014/11/6.
  */
 object TestServer extends App{
 
-  DefaultXmppServer.startUp()
-  StdIn.readLine()
-  DefaultXmppServer.shutDown()
+//  DefaultXmppServer.startUp()
+//  StdIn.readLine()
+//  DefaultXmppServer.shutDown()
 }
 //
 //object TcpClient{

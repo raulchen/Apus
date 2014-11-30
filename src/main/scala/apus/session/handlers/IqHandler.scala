@@ -16,7 +16,7 @@ class IqHandler(val session: Session) extends StanzaHandler[Iq] with SessionHand
 
   import apus.protocol.IqType._
 
-  val resourceIdGenerator = new UuidGenerator
+  def nextResourceId() = UuidGenerator.next()
 
   override def handle(iq: Iq): Unit ={
     iq.iqType match {
@@ -31,7 +31,7 @@ class IqHandler(val session: Session) extends StanzaHandler[Iq] with SessionHand
   private def handleSet(iq: Iq): Unit ={
     iq.xml.child.headOption.orNull match {
       case bind @ Elem(_, "bind", _, _, _) if bind.namespace == XmppNamespaces.BIND => {
-        val resourceId = resourceIdGenerator.next()
+        val resourceId = nextResourceId()
         val newJid = session.clientJid.get.copy(resourceOpt = Some(resourceId))
 
         registerToUserChannel(newJid, {
@@ -44,7 +44,7 @@ class IqHandler(val session: Session) extends StanzaHandler[Iq] with SessionHand
         })
       }
       case <session /> => {
-        reply(ServerResponses.session(iq.id, session.config.serverJid))
+        reply(ServerResponses.session(iq.id, session.runtime.serverJid))
       }
       case _ => unhandled(iq)
     }

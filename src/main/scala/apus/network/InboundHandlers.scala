@@ -7,7 +7,7 @@ import javax.xml.stream.events.{StartElement, XMLEvent}
 import akka.actor.{PoisonPill, ActorRef}
 import akka.event.Logging
 import apus.protocol.{StreamStart, XmppNamespaces}
-import apus.server.ServerConfig
+import apus.server.ServerRuntime
 import apus.session.Session
 import apus.util.Xml
 import com.fasterxml.aalto.evt.EventAllocatorImpl
@@ -59,7 +59,7 @@ private object StreamHandler{
 /**
  * handle incoming XMLEvent, and send StreamStart/StreamEnd/Stanzas to Session actor.
  */
-class StreamHandler(config: ServerConfig) extends SimpleChannelInboundHandler[XMLEvent]{
+class StreamHandler(runtime: ServerRuntime) extends SimpleChannelInboundHandler[XMLEvent]{
 
   import apus.network.StreamHandler._
 
@@ -67,7 +67,7 @@ class StreamHandler(config: ServerConfig) extends SimpleChannelInboundHandler[XM
   val MaxBufSizeToTrim = 5 * 1024
   val MaxSizePerStanza = 20 * 1024
 
-  val log = Logging(config.actorSystem.eventStream, this.getClass.getCanonicalName)
+  val log = Logging(runtime.actorSystem.eventStream, this.getClass.getCanonicalName)
 
   var depth = 0
   var buf = new ByteArrayOutputStream(InitialBufSize)
@@ -78,7 +78,7 @@ class StreamHandler(config: ServerConfig) extends SimpleChannelInboundHandler[XM
   override def channelActive(ctx: ChannelHandlerContext): Unit = {
     ctx.writeAndFlush("""<?xml version="1.0" encoding="UTF-8"?>""")
     //create session actor
-    session = config.actorSystem.actorOf(Session.props(ctx, config))
+    session = runtime.actorSystem.actorOf(Session.props(ctx, runtime))
   }
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {
@@ -98,7 +98,7 @@ class StreamHandler(config: ServerConfig) extends SimpleChannelInboundHandler[XM
   }
 
   private def emit(msg: AnyRef): Unit = {
-    log.debug("emit {}", msg)
+//    log.debug("emit {}", msg)
     session ! msg
   }
 
@@ -157,9 +157,9 @@ class StreamHandler(config: ServerConfig) extends SimpleChannelInboundHandler[XM
 }
 
 
-class InboundExceptionHandler(config: ServerConfig) extends ChannelInboundHandlerAdapter{
+class InboundExceptionHandler(runtime: ServerRuntime) extends ChannelInboundHandlerAdapter{
 
-  val log = Logging(config.actorSystem(), this.getClass.getCanonicalName)
+  val log = Logging(runtime.actorSystem(), this.getClass.getCanonicalName)
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
     cause match {

@@ -1,6 +1,7 @@
 package apus.network
 
-import apus.server.ServerConfig
+import akka.event.Logging
+import apus.server.ServerRuntime
 
 import scala.collection.JavaConverters._
 import java.net.InetAddress
@@ -18,10 +19,14 @@ import io.netty.handler.ssl.{SslContext, SslHandler}
 import io.netty.handler.ssl.util.SelfSignedCertificate
 import io.netty.util.concurrent.{Future => NFuture, GlobalEventExecutor, GenericFutureListener}
 
+import scala.util.control.NonFatal
+
 /**
  * Created by Hao Chen on 2014/11/5.
  */
-class TcpEndpoint(port: Int, config: ServerConfig) extends Endpoint{
+class TcpEndpoint(port: Int, runtime: ServerRuntime) extends Endpoint{
+
+  val log = Logging(runtime.actorSystem().eventStream, this.getClass.getCanonicalName)
 
   val channelInitializer = new ChannelInitializer[SocketChannel]() {
 
@@ -31,17 +36,19 @@ class TcpEndpoint(port: Int, config: ServerConfig) extends Endpoint{
       pipeline.addLast("xmlEncoder", new XmlEncoder)
 
       pipeline.addLast("xmlFrameDecoder", new XmlFrameDecoder)
-      pipeline.addLast("streamHandler", new StreamHandler(config))
+      pipeline.addLast("streamHandler", new StreamHandler(runtime))
 
-      pipeline.addLast("exceptionHandler", new InboundExceptionHandler(config))
+      pipeline.addLast("exceptionHandler", new InboundExceptionHandler(runtime))
     }
   }
 
   var ch: Channel = null
+  var bossGroup: EventLoopGroup = null
+  var workerGroup: EventLoopGroup = null
 
   override def start(): Unit = {
-    val bossGroup: EventLoopGroup = new NioEventLoopGroup()
-    val workerGroup: EventLoopGroup = new NioEventLoopGroup()
+    bossGroup = new NioEventLoopGroup()
+    workerGroup = new NioEventLoopGroup()
 
     try {
       val b = new ServerBootstrap()
@@ -53,13 +60,23 @@ class TcpEndpoint(port: Int, config: ServerConfig) extends Endpoint{
 
       ch = b.bind(port).sync().channel()
     }
-    finally {
-      bossGroup.shutdownGracefully()
-      workerGroup.shutdownGracefully()
+    catch {
+      case NonFatal(e) => {
+        log.error("Fail to start TCP endpoint: {}", e.getMessage)
+        shutdown()
+      }
     }
   }
 
   override def shutdown(): Unit = {
-    ch.close()
+    if(ch != null) {
+      ch.close()
+    }
+    if(bossGroup != null) {
+      bossGroup.shutdownGracefully()
+    }
+    if(workerGroup != null){
+      workerGroup.shutdownGracefully()
+    }
   }
 }

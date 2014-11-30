@@ -6,7 +6,7 @@ import scala.xml.{Text, Null, UnprefixedAttribute, Elem}
  * A Message stanza.
  * Created by Hao Chen on 2014/11/24.
  */
-class Message(override val xml: Elem) extends Stanza{
+case class Message(override val xml: Elem) extends Stanza{
 
   import Message._
 

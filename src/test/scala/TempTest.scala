@@ -26,8 +26,7 @@ object TempTest{
   }
 
   def main(args: Array[String]) {
-    val x = ServerResponses.streamOpenerForClient(SessionState.INITIALIZED, Jid("hehe@haha.com"), None)
-    println(x)
+    XML.loadString("<a/>")
   }
 
 }
