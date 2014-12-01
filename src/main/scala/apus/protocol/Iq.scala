@@ -32,8 +32,10 @@ object Iq {
    * @return
    */
   def verify(xml: Elem): Boolean = {
+    val id = attr(xml, "id")
     xml.label == Label &&
-      attr(xml, "id").isDefined
+      id.isDefined &&
+      !id.get.isEmpty
   }
 
 }

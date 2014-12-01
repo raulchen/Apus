@@ -67,7 +67,7 @@ class StreamHandler(runtime: ServerRuntime) extends SimpleChannelInboundHandler[
   val MaxBufSizeToTrim = 5 * 1024
   val MaxSizePerStanza = 20 * 1024
 
-  val log = Logging(runtime.actorSystem.eventStream, this.getClass.getCanonicalName)
+  val log = Logging(runtime.actorSystem(), this.getClass)
 
   var depth = 0
   var buf = new ByteArrayOutputStream(InitialBufSize)
@@ -78,7 +78,7 @@ class StreamHandler(runtime: ServerRuntime) extends SimpleChannelInboundHandler[
   override def channelActive(ctx: ChannelHandlerContext): Unit = {
     ctx.writeAndFlush("""<?xml version="1.0" encoding="UTF-8"?>""")
     //create session actor
-    session = runtime.actorSystem.actorOf(Session.props(ctx, runtime))
+    session = runtime.actorSystem().actorOf(Session.props(ctx, runtime))
   }
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {
@@ -159,7 +159,7 @@ class StreamHandler(runtime: ServerRuntime) extends SimpleChannelInboundHandler[
 
 class InboundExceptionHandler(runtime: ServerRuntime) extends ChannelInboundHandlerAdapter{
 
-  val log = Logging(runtime.actorSystem(), this.getClass.getCanonicalName)
+  val log = Logging(runtime.actorSystem(), this.getClass)
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
     cause match {
@@ -168,7 +168,7 @@ class InboundExceptionHandler(runtime: ServerRuntime) extends ChannelInboundHand
         ctx.close()
       }
       case e: IOException => {
-        log.error("IOException: {}", e.getMessage)
+        log.error(e, "IOException caught, close channel.")
         ctx.close()
       }
       case _ => super.exceptionCaught(ctx, cause)

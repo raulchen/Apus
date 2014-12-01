@@ -26,7 +26,7 @@ import scala.util.control.NonFatal
  */
 class TcpEndpoint(port: Int, runtime: ServerRuntime) extends Endpoint{
 
-  val log = Logging(runtime.actorSystem().eventStream, this.getClass.getCanonicalName)
+  val log = Logging(runtime.actorSystem(), this.getClass)
 
   val channelInitializer = new ChannelInitializer[SocketChannel]() {
 
@@ -62,7 +62,7 @@ class TcpEndpoint(port: Int, runtime: ServerRuntime) extends Endpoint{
     }
     catch {
       case NonFatal(e) => {
-        log.error("Fail to start TCP endpoint: {}", e.getMessage)
+        log.error(e, "Fail to start TCP endpoint.")
         shutdown()
       }
     }

@@ -4,6 +4,7 @@ import apus.server.ClusteredXmppServer
 import com.typesafe.config.{ConfigValueFactory, ConfigValue, ConfigFactory}
 
 /**
+ * Run cluster.
  * Created by Hao Chen on 2014/11/30.
  */
 object ClusterTest{
@@ -19,6 +20,7 @@ object ClusterTest{
   }
 
   def main(args: Array[String]) {
+    System.setProperty("java.library.path", "./sigar")
     start(2551, 5222)
     start(2552, 5223)
   }

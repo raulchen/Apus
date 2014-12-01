@@ -7,14 +7,17 @@ val dependencies = Seq(
   //========= Scala
   "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
   "com.typesafe.akka" %% "akka-contrib" % akkaVersion,
-  "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion,
+  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
   "org.scala-lang.modules" %% "scala-xml" % "1.0.2",
+  "com.github.kxbmap" %% "configs" % "0.2.2",
   //========= Java
   "io.netty" % "netty-all" % "4.0.24.Final",
   "com.fasterxml" % "aalto-xml" % "0.9.8",
   "org.fusesource" % "sigar" % "1.6.4",
+  "ch.qos.logback" % "logback-classic" % "1.0.13",
   //======== Test
-  "org.scalatest" %% "scalatest" % "2.2.1" % "test"
+  "org.scalatest" %% "scalatest" % "2.2.1" % "test",
+  "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion
 )
 
 val scalaCompileOptions = Seq("-encoding", "UTF-8", "-target:jvm-1.6", "-feature", "-unchecked", "-Xlog-reflective-calls", "-Xlint")

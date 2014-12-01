@@ -32,7 +32,7 @@ abstract class XmppServer{
 
   val actorSystem = ActorSystem("apus", config)
 
-  val log = Logging(actorSystem.eventStream, this.getClass.getCanonicalName)
+  val log = Logging(actorSystem, this.getClass)
 
   lazy val endPoints = List(new TcpEndpoint(runtime.port, runtime))
 

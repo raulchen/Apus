@@ -1,6 +1,6 @@
 package apus
 
-import apus.server.{ClusteredXmppServer, StandAloneXmppServer}
+import apus.server.{XmppServer, ClusteredXmppServer, StandAloneXmppServer}
 import com.typesafe.config.ConfigFactory
 
 import scala.io.StdIn
@@ -10,6 +10,8 @@ import scala.io.StdIn
  */
 object Main {
 
+  import com.github.kxbmap.configs._
+
   def main(args: Array[String]) {
     val config = if (args.isEmpty){
       ConfigFactory.load()
@@ -17,27 +19,22 @@ object Main {
       ConfigFactory.load(args(0))
     }
 
-    var mode: String = null
-    if(config.hasPath("apus.mode")){
-      mode = config.getString("apus.mode").toLowerCase()
-      if(mode != "stand-alone" &&
-          mode != "cluster"){
-        mode = null
+    val mode = config.opt[String]("apus.mode")
+
+    val server = mode match{
+      case Some("stand-alone") => Some(new StandAloneXmppServer(config))
+      case Some("cluster") => Some(new ClusteredXmppServer(config))
+      case _ => {
+        System.err.println("""'apus.mode' should be set to either 'stand-alone' or 'cluster' in config file.""")
+        System.exit(-1)
+        None
       }
     }
 
-    if(mode == null){
-      System.err.println("""'apus.mode' should be set to either 'stand-alone' or 'cluster' in config file.""")
-      System.exit(-1)
+    server.foreach { s =>
+      s.startUp()
+      StdIn.readLine()
+      s.shutDown()
     }
-
-    val server = mode match{
-      case "stand-alone" => new StandAloneXmppServer(config)
-      case "cluster" => new ClusteredXmppServer(config)
-    }
-
-    server.startUp()
-    StdIn.readLine()
-    server.shutDown()
   }
 }

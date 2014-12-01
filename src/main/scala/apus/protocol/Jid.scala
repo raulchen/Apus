@@ -87,7 +87,7 @@ object Jid {
       }
     }
     catch {
-      case NonFatal(e) => None
+      case e: IllegalArgumentException => None
     }
   }
 }
