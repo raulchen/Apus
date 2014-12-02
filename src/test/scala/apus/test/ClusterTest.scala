@@ -22,6 +22,7 @@ object ClusterTest{
   def main(args: Array[String]) {
     System.setProperty("java.library.path", "./sigar")
     start(2551, 5222)
-    start(2552, 5223)
+//    start(2552, 5223)
+//    start(2553, 5224)
   }
 }

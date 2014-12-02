@@ -6,7 +6,7 @@ import org.scalatest.{Matchers, FlatSpec}
 import scala.collection.mutable
 
 /**
- * Test Jid
+ * Test Jid.
  * Created by Hao Chen on 2014/12/1.
  */
 class JidSpec extends BaseSpec{
@@ -23,17 +23,17 @@ class JidSpec extends BaseSpec{
     Jid("a@apus.im/.b") shouldBe new Jid(Some("a"), "apus.im", Some(".b"))
   }
 
-  "Jid.apply" should "throws exception when accepting these inputs" in {
-    inValidStrings.foreach{ str =>
-      a [IllegalArgumentException] should be thrownBy {
+  it should "throws exception when accepting these inputs" in {
+    forAll(inValidStrings) { str =>
+      a [IllegalArgumentException] shouldBe thrownBy {
         Jid(str)
       }
     }
   }
 
   "Jid.parse" should "returns None if handling invalid strings" in {
-    inValidStrings foreach { str =>
-      Jid.parse(str) should be (scala.None)
+    forAll(inValidStrings) { str =>
+      Jid.parse(str) shouldBe scala.None
     }
   }
 

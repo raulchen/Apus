@@ -168,7 +168,12 @@ class InboundExceptionHandler(runtime: ServerRuntime) extends ChannelInboundHand
         ctx.close()
       }
       case e: IOException => {
-        log.error(e, "IOException caught, close channel.")
+        if(e.getMessage == "An existing connection was forcibly closed by the remote host"){
+          log.debug(e.getMessage)
+        }
+        else{
+          log.error(e, "IOException caught, close channel.")
+        }
         ctx.close()
       }
       case _ => super.exceptionCaught(ctx, cause)

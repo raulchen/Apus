@@ -13,7 +13,9 @@ class StanzaSpec extends BaseSpec{
     val xml = <iq xmlns="jabber:client" type="result" id="s4gIA-1" from="cloudshare.com"></iq>
     val iq = Stanza(xml)
     iq shouldBe an[Iq]
-    iq.asInstanceOf[Iq].iqType shouldBe IqType.Result
+    iq should have{
+      'iqType (IqType.Result)
+    }
   }
 
   it should "parse valid Message stanza" in {
@@ -21,10 +23,12 @@ class StanzaSpec extends BaseSpec{
       <body>Wherefore art thou, Romeo?</body>
     </message>
     val msg = Stanza(xml).asInstanceOf[Message]
-    msg.fromOpt.get.toString shouldBe "juliet@example.com/balcony"
-    msg.to.toString shouldBe "romeo@example.net"
-    msg.msgType shouldBe MessageType.Chat
-    msg.body shouldBe "Wherefore art thou, Romeo?"
+    msg should have (
+      'fromOpt (Some(Jid("juliet@example.com/balcony"))),
+      'to (Jid("romeo@example.net")),
+      'msgType (MessageType.Chat),
+      'body ("Wherefore art thou, Romeo?")
+    )
 
     //and body can be empty
     val anotherXml = Xml("""<message to="2@apus.im"><body></body></message>""")
