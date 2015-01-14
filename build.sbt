@@ -1,6 +1,13 @@
 import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 
+import AssemblyKeys._
+
+assemblySettings
+
+jarName in assembly := "apus.jar"
+
+
 val akkaVersion = "2.3.6"
 
 val dependencies = Seq(

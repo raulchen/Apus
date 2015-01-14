@@ -16,7 +16,7 @@ case class Message(override val xml: Elem) extends Stanza{
 
   override val label = Message.Label
 
-  def msgType = MessageType(attr("type"))
+  def typ = MessageType(attr("type"))
 
   lazy val body: String = (xml \ "body").text
 

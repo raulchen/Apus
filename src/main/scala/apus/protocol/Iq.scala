@@ -16,7 +16,7 @@ class Iq(override val xml: Elem) extends Stanza{
 
   val id = idOpt.get
 
-  val iqType = IqType(attr("type"))
+  val typ = IqType(attr("type"))
 
 }
 

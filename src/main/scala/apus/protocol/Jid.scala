@@ -47,8 +47,8 @@ case class Jid(nodeOpt: Option[String],
 
 object Jid {
 
-  private val validChars = "[^@/]+"
-  private val pattern = s"(($validChars)@)?($validChars)(/($validChars))?".r
+  private val ValidChars = "[^@/]+"
+  private val Pattern = s"(($ValidChars)@)?($ValidChars)(/($ValidChars))?".r
 
   /**
    * Parse a String to Jid.
@@ -60,7 +60,7 @@ object Jid {
    */
   def apply(str: String, requireNode: Boolean = true): Jid = {
     str match {
-      case pattern(_, node, domain, _, resource) => {
+      case Pattern(_, node, domain, _, resource) => {
         if (requireNode) {
           require(node != null, "Jid must have a node")
         }

@@ -16,7 +16,7 @@ class UserChannel(userId: String) extends Actor with ActorLogging{
 
   override def receive: Receive = {
     case RegisterSession(session, _) => {
-      println(session)
+//      println(session)
       sessions += session
       context.watch(session)
       sender ! SessionRegistered

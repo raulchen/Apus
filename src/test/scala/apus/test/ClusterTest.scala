@@ -9,10 +9,10 @@ import com.typesafe.config.{ConfigValueFactory, ConfigValue, ConfigFactory}
  */
 object ClusterTest{
 
-  def start(port: Int, tcpPort: Int): Unit ={
+  def start(incr: Int): Unit ={
     val config =
-      ConfigFactory.parseString(s"akka.remote.netty.tcp.port=$port")
-        .withValue("apus.server.port", ConfigValueFactory.fromAnyRef(tcpPort))
+      ConfigFactory.parseString(s"akka.remote.netty.tcp.port=${2551 + incr}")
+        .withValue("apus.server.port", ConfigValueFactory.fromAnyRef(5222 + incr))
         .withFallback(ConfigFactory.load("cluster-test"))
 
     val server = new ClusteredXmppServer(config)
@@ -20,9 +20,8 @@ object ClusterTest{
   }
 
   def main(args: Array[String]) {
-    System.setProperty("java.library.path", "./sigar")
-    start(2551, 5222)
-//    start(2552, 5223)
-//    start(2553, 5224)
+    System.setProperty("java.library.path", "sigar")
+//    start(0);
+    start(1);
   }
 }

@@ -12,7 +12,7 @@ import apus.session.handlers.IqHandler
 import apus.protocol._
 import apus.server.ServerRuntime
 import apus.session.auth.Mechanism
-import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext}
 
 import scala.xml.Elem
 
@@ -66,38 +66,46 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
       reply(ServerResponses.streamOpenerForClient(state, runtime.serverJid, Some(id)))
       state match {
         case INITIALIZED => become(STARTED)
+//        case INITIALIZED => become(ENCRYPTED)
         case ENCRYPTED =>
         case AUTHENTICATED =>
       }
     }
   }
 
-  def initialized: Receive = handleStreamStart
-
-  /**
-   * make this channel encrypted
-   */
-  private def switchToTls(): Unit = {
-
-    val handler = runtime.sslContext.newHandler(ctx.channel.alloc())
-    ctx.channel.pipeline.addFirst("sslHandler", handler)
-  }
-
-  def started: Receive = {
+  private def handleStartTls: Receive = {
     case elem @ <starttls /> if elem.namespace == XmppNamespaces.TLS => {
-      reply(ServerResponses.tlsProceed)
-      switchToTls()
-      become(ENCRYPTED)
+
+      def switchToTls(): Unit = {
+        //make this channel encrypted
+        val handler = runtime.sslContext.newHandler(ctx.channel.alloc())
+        ctx.channel.pipeline.addFirst("sslHandler", handler)
+      }
+
+      reply(ServerResponses.tlsProceed).addListener(new ChannelFutureListener {
+        override def operationComplete(future: ChannelFuture): Unit = {
+          if(future.isSuccess){
+            switchToTls()
+            become(ENCRYPTED)
+          }
+        }
+      })
     }
   }
 
-  def encrypted: Receive = handleStreamStart orElse {
+  private def handleAuth: Receive = {
     case elem @ Elem(_, "auth", _, _, child) if elem.namespace == XmppNamespaces.SASL =>{
       if(mechanism.auth(child.text)){
         become(AUTHENTICATED)
       }
     }
   }
+
+  def initialized: Receive = handleStreamStart
+
+  def started: Receive = handleStartTls orElse handleAuth
+
+  def encrypted: Receive = handleStreamStart orElse handleAuth
 
   def authenticated: Receive = handleStreamStart orElse {
     case elem: Elem => {
@@ -107,12 +115,12 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
         case presence: Presence => //ignore Presence stanza for now
         case msg: Message => {
           var m = msg
-          if(m.fromOpt.isDefined == false){
+          if(m.fromOpt.isEmpty){
             m = m.copy(from = clientJid)
           }
           router ! new ReceiveMessage(m.to.node, msg)
         }
-        case _ => log.warning("invalid stanza: {}", elem)
+        case _ => log.warning("receive invalid stanza from [{}]: {}", clientJid, elem)
       }
     }
     case ReceiveMessage(_, msg) => {

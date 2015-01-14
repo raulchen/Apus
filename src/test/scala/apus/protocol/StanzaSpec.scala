@@ -14,7 +14,7 @@ class StanzaSpec extends BaseSpec{
     val iq = Stanza(xml)
     iq shouldBe an[Iq]
     iq should have{
-      'iqType (IqType.Result)
+      'typ (IqType.Result)
     }
   }
 
@@ -26,7 +26,7 @@ class StanzaSpec extends BaseSpec{
     msg should have (
       'fromOpt (Some(Jid("juliet@example.com/balcony"))),
       'to (Jid("romeo@example.net")),
-      'msgType (MessageType.Chat),
+      'typ (MessageType.Chat),
       'body ("Wherefore art thou, Romeo?")
     )
 

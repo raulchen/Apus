@@ -19,7 +19,7 @@ class IqHandler(val session: Session) extends StanzaHandler[Iq] with SessionHand
   def nextResourceId() = UuidGenerator.next()
 
   override def handle(iq: Iq): Unit ={
-    iq.iqType match {
+    iq.typ match {
       case Set => {
         handleSet(iq)
       }
