@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, Props, ActorSystem}
 import akka.event.Logging
 import akka.routing.{FromConfig, ConsistentHashingPool}
 import apus.auth.{UserAuth, AnonymousUserAuth}
-import apus.channel.UserChannelRouter
+import apus.channel.ChannelRouter
 import apus.network.TcpEndpoint
 import com.typesafe.config.Config
 import io.netty.handler.ssl.SslContext

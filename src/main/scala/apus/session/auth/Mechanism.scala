@@ -5,10 +5,12 @@ import java.util.Base64
 import apus.protocol.{ServerResponses, Jid}
 import apus.session.{SessionHandler, Session}
 
+import scala.util.{Success, Try}
+
 /**
- * Created by Hao Chen on 2014/11/25.
- */
-class Mechanism(val session: Session) extends SessionHandler{
+* Created by Hao Chen on 2014/11/25.
+*/
+object Mechanism {
 
   private def split(b: Array[Byte]) = {
     var res: List[String] = Nil
@@ -22,34 +24,25 @@ class Mechanism(val session: Session) extends SessionHandler{
     res
   }
 
-  def auth(encoded: String): Boolean = {
+  /**
+   *
+   * @param encoded encoded auth info
+   * @return Option of (jid, password) tuple
+   */
+  def decode(encoded: String, domain: String): Option[(Jid, String)] = {
     val decoded = Base64.getDecoder.decode(encoded)
     val parts = split(decoded)
-    if(parts.length != 3){
-      reply(ServerResponses.authFailureMalformedRequest)
-      return false
+    if (parts.length != 3) {
+      None
     }
-    var (alias, username, password) = (parts(0), parts(1), parts(2))
+    else {
+      var (alias, username, password) = (parts(0), parts(1), parts(2))
 
-    val config = session.runtime
-    if(!username.contains("@")){
-      username = username + "@" + config.domain
-    }
+      if (!username.contains("@")) {
+        username = username + "@" + domain
+      }
 
-    val jid = Jid.parse(username)
-    if(jid.isDefined) {
-      setClientJid(jid.get)
-      if (config.userAuth.verify(jid.get, password)) {
-        reply(ServerResponses.authSuccess)
-        return true
-      }
-      else {
-        return false
-      }
-    }
-    else{
-      reply(ServerResponses.authFailureMalformedRequest)
-      return false
+      Jid.parse(username).map((_, password))
     }
   }
 }

@@ -20,8 +20,10 @@ case class Message(override val xml: Elem) extends Stanza{
 
   lazy val body: String = (xml \ "body").text
 
-  def copy(from: Option[Jid] = this.fromOpt) = {
-    val metaData = new UnprefixedAttribute("from", from.map(_.toString).map(Text(_)), Null)
+  def copy(from: Option[Jid] = this.fromOpt,
+            to: Option[Jid] = this.toOpt) = {
+    var metaData = new UnprefixedAttribute("from", from.map(_.toString).map(Text(_)), Null)
+    metaData = new UnprefixedAttribute("to", to.map(_.toString).map(Text(_)), metaData)
     new Message(xml % metaData)
   }
 }
@@ -48,7 +50,7 @@ object MessageType extends Enumeration{
 
   val Chat = Value("chat")
   val Normal = Value("normal")
-  val Group = Value("groupchat")
+  val GroupChat = Value("groupchat")
   val Headline = Value("headline")
   val Error = Value("error")
 

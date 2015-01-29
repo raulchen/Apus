@@ -4,7 +4,7 @@ import akka.actor.{Props, ActorRef}
 import akka.routing.ConsistentHashingRouter.{ConsistentHashable, ConsistentHashMapping}
 import akka.routing.{ConsistentHashingPool, FromConfig}
 import apus.auth.{AnonymousUserAuth, UserAuth}
-import apus.channel.UserChannelRouter
+import apus.channel.ChannelRouter
 import com.typesafe.config.Config
 
 /**
@@ -31,7 +31,7 @@ class ClusteredXmppServer(override val config: Config) extends XmppServer{
       val virtualNodesFactor = config.opt[Int]("akka.actor.deployment./localRouter.virtual-nodes-factor").getOrElse(10)
       ConsistentHashingPool(nrOfInstances,
         virtualNodesFactor = virtualNodesFactor,
-        hashMapping = localRouterRehashing).props(Props[UserChannelRouter])
+        hashMapping = localRouterRehashing).props(ChannelRouter.props(runtime))
     }
 
     actorSystem.actorOf(localRouterProps, "localRouter")

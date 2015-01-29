@@ -5,7 +5,7 @@ import apus.protocol.{ServerResponses, Iq, XmppNamespaces}
 import apus.session.{SessionHandler, Session}
 import apus.util.UuidGenerator
 
-import scala.util.Success
+import scala.util.{Failure, Success}
 import scala.xml.Elem
 
 /**
@@ -16,7 +16,8 @@ class IqHandler(val session: Session) extends StanzaHandler[Iq] with SessionHand
 
   import apus.protocol.IqType._
 
-  def nextResourceId() = UuidGenerator.next()
+//  def nextResourceId() = UuidGenerator.next()
+  def nextResourceId() = session.id
 
   override def handle(iq: Iq): Unit ={
     iq.typ match {
@@ -35,12 +36,13 @@ class IqHandler(val session: Session) extends StanzaHandler[Iq] with SessionHand
         val newJid = session.clientJid.get.copy(resourceOpt = Some(resourceId))
 
         registerToUserChannel(newJid, {
-          case Success(SessionRegistered) => {
+          case Success(SessionRegistered) =>
             reply(ServerResponses.bind(iq.id, session.clientJid.get))
-          }
-          case _ => {
-            session.log.error(s"fail to register session for ${session.clientJid}")
-          }
+
+          case Success(_) => //ignore
+
+          case Failure(e) =>
+            session.log.error(e, s"fail to register session for ${session.clientJid}")
         })
       }
       case <session /> => {

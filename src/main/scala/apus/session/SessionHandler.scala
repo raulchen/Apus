@@ -1,5 +1,8 @@
 package apus.session
 
+import io.netty.channel.{ChannelFuture, ChannelFutureListener}
+
+import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
 
 import akka.pattern.ask
@@ -15,15 +18,34 @@ import scala.xml.Elem
  */
 trait SessionHandler {
 
-  def session(): Session
+  def session: Session
 
   /**
    * reply message to client
    * @param msg
    * @return
    */
-  def reply(msg: Elem) = {
-    session.ctx.writeAndFlush(msg)
+  def reply(msg: Elem): Future[Unit] = {
+    val cf = session.ctx.writeAndFlush(msg)
+    toScalaFuture(cf)
+  }
+
+  private def toScalaFuture(cf: ChannelFuture): Future[Unit] = {
+    val promise = Promise[Unit]()
+
+    cf.addListener(new ChannelFutureListener {
+
+      override def operationComplete(future: ChannelFuture): Unit = {
+        if(future.isSuccess){
+          promise.success()
+        }
+        else{
+          promise.failure(future.cause())
+        }
+      }
+    })
+
+    promise.future
   }
 
   /**
@@ -44,7 +66,7 @@ trait SessionHandler {
     setClientJid(newJid)
 
     val router = session.runtime.router
-    val msg = new RegisterSession(session.self, session.clientJid.get)
+    val msg = new RegisterSession(session.self, session.clientJid.get.node)
     val f = ask(router, msg)(3.seconds)
     f.onComplete(completeCallback)(session.context.dispatcher)
   }

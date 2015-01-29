@@ -2,18 +2,21 @@ package apus.session
 
 import java.util.concurrent.ThreadLocalRandom
 
+import apus.auth.UserAuthException
+import apus.session.auth.Mechanism
+
 import scala.concurrent.duration._
 
 import akka.actor._
 import akka.pattern.{ask, pipe}
 
-import apus.channel.{ReceiveMessage, SessionRegistered, RegisterSession}
+import apus.channel.{ToGroupMessage, ToUserMessage, SessionRegistered, RegisterSession}
 import apus.session.handlers.IqHandler
 import apus.protocol._
 import apus.server.ServerRuntime
-import apus.session.auth.Mechanism
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext}
 
+import scala.util.{Failure, Success}
 import scala.xml.Elem
 
 /**
@@ -25,17 +28,17 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
 
   import apus.session.SessionState._
 
+  implicit val ec = context.dispatcher
+
   override val session: Session = this
 
-  val id = runtime.nextSessionId()
+  val id = runtime.nextSessionId
 
   var state = INITIALIZED
 
-  val router = runtime.router()
+  val router = runtime.router
 
   var clientJid: Option[Jid] = None
-
-  val mechanism = new Mechanism(this)
 
   val iqHandler = new IqHandler(this)
 
@@ -82,21 +85,38 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
         ctx.channel.pipeline.addFirst("sslHandler", handler)
       }
 
-      reply(ServerResponses.tlsProceed).addListener(new ChannelFutureListener {
-        override def operationComplete(future: ChannelFuture): Unit = {
-          if(future.isSuccess){
-            switchToTls()
-            become(ENCRYPTED)
-          }
-        }
-      })
+      val f = reply(ServerResponses.tlsProceed)
+      f onSuccess {
+        case _ =>
+          switchToTls()
+          become(ENCRYPTED)
+      }
     }
   }
 
   private def handleAuth: Receive = {
     case elem @ Elem(_, "auth", _, _, child) if elem.namespace == XmppNamespaces.SASL =>{
-      if(mechanism.auth(child.text)){
-        become(AUTHENTICATED)
+
+      Mechanism.decode(child.text, runtime.domain) match {
+        case Some((jid, password)) =>
+          setClientJid(jid)
+          val f = runtime.userAuth.auth(jid, password)
+          f onComplete {
+            case Success(true) =>
+              reply(ServerResponses.authSuccess)
+              become(AUTHENTICATED)
+
+            case Success(false) =>
+            //todo reply
+
+            case Failure(e) if e.isInstanceOf[UserAuthException] =>
+              e.asInstanceOf[UserAuthException].resp.foreach {
+                reply
+              }
+          }
+
+        case None =>
+          reply(ServerResponses.authFailureMalformedRequest)
       }
     }
   }
@@ -113,18 +133,34 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
       stanza match {
         case iq: Iq => iqHandler.handle(iq)
         case presence: Presence => //ignore Presence stanza for now
-        case msg: Message => {
-          var m = msg
-          if(m.fromOpt.isEmpty){
-            m = m.copy(from = clientJid)
-          }
-          router ! new ReceiveMessage(m.to.node, msg)
-        }
+        case msg: Message => relayMessage(msg)
         case _ => log.warning("receive invalid stanza from [{}]: {}", clientJid, elem)
       }
     }
-    case ReceiveMessage(_, msg) => {
+    case ToUserMessage(_, msg) => {
       reply(msg.xml)
+    }
+  }
+
+  def relayMessage(msg: Message): Unit ={
+    import MessageType._
+    msg.typ match {
+      case Chat | Normal => {
+        var m = msg
+        if(m.fromOpt.isEmpty){
+          m = m.copy(from = clientJid)
+        }
+        router ! new ToUserMessage(msg.to.node, msg)
+      }
+      case GroupChat => {
+        // from = ${groupId}@chat.apus.im/${fromId}
+        val from = msg.to.copy(resourceOpt = Some(clientJid.map(_.node).getOrElse("")))
+        val m = msg.copy(from = Some(from))
+        router ! new ToGroupMessage(m)
+      }
+      case typ: MessageType.Value => {
+        log.warning("unrecognized message type {}", typ)
+      }
     }
   }
 

@@ -24,17 +24,20 @@ class UserChannel(userId: String) extends Actor with ActorLogging{
     case Terminated(session) => {
       sessions -= session
       if(sessions.size == 0){
+        //TODO wait a moment
         context.stop(self)
       }
     }
-    case msg: ReceiveMessage => {
+    case msg: ToUserMessage => {
       handleReceivedMessage(msg)
     }
   }
 
-  private def handleReceivedMessage(msg: ReceiveMessage): Unit ={
+  private def handleReceivedMessage(msg: ToUserMessage): Unit ={
+    //TODO save msg
     if(sessions.isEmpty){
-      log.info(s"No active session for $userId")
+      //TODO push notification
+      log.info(s"No active session for {}", userId)
     }
     else{
       for(session <- sessions){

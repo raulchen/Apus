@@ -38,8 +38,8 @@ case class Jid(nodeOpt: Option[String],
       sb.append(_).append("@")
     }
     sb.append(domain)
-    resourceOpt.foreach {
-      sb.append("/").append(_)
+    resourceOpt.foreach { resource =>
+      sb.append("/").append(resource)
     }
     sb.toString()
   }

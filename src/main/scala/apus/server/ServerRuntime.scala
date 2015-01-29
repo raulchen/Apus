@@ -1,5 +1,7 @@
 package apus.server
 
+import java.util.concurrent.atomic.AtomicLong
+
 import akka.actor.{ActorRef, ActorSystem}
 import apus.auth.UserAuth
 import apus.protocol.Jid
@@ -21,13 +23,13 @@ trait ServerRuntime {
 
   val sslContext: SslContext
 
-  def nextSessionId(): String
+  def nextSessionId: String
 
-  def actorSystem(): ActorSystem
+  def actorSystem: ActorSystem
 
-  def router(): ActorRef
+  def router: ActorRef
 
-  def userAuth(): UserAuth
+  def userAuth: UserAuth
 }
 
 object ServerRuntime{
@@ -46,12 +48,13 @@ class FromConfigServerRuntime(server: XmppServer, config: Config) extends Server
   private val ssc = new SelfSignedCertificate()
   override val sslContext: SslContext = SslContext.newServerContext(ssc.certificate, ssc.privateKey)
 
-  override def nextSessionId(): String = UuidGenerator.next()
+  private val sessionId = new AtomicLong(1)
+  override def nextSessionId: String = sessionId.incrementAndGet().toString
 
-  override def actorSystem(): ActorSystem = server.actorSystem
+  override def actorSystem: ActorSystem = server.actorSystem
 
-  override def router(): ActorRef = server.router
+  override def router: ActorRef = server.router
 
-  override def userAuth(): UserAuth = server.userAuth
+  override def userAuth: UserAuth = server.userAuth
 
 }

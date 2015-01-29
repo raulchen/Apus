@@ -2,19 +2,17 @@ package apus.auth
 
 import apus.protocol.Jid
 
+import scala.concurrent.Future
+import scala.xml.Elem
+
 /**
  * User authentication
  * Created by Hao Chen on 2014/11/25.
  */
 trait UserAuth {
 
-  /**
-   * verify jid and password
-   * @param jid
-   * @param password
-   * @return
-   */
-  def verify(jid: Jid, password: String): Boolean
+
+  def auth(jid: Jid, password: String): Future[Boolean]
 }
 
-
+class UserAuthException(val resp: Option[Elem], message: String = null, cause: Throwable = null) extends RuntimeException(message, cause)
