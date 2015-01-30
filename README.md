@@ -9,5 +9,7 @@ Features:
 #Experiment results
 
 Server cluster: 2 virtual machines with a quad-core CPU and 4 GB RAM.
+
 Client: 10k simultaneous users simulated by Tsung, each of which keeps sending messages to random targets at the speed of one message per second.
+
 Average message delivery latency: Apus: 1080ms, Tigase: 16376ms.
