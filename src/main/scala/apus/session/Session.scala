@@ -1,22 +1,16 @@
 package apus.session
 
-import java.util.concurrent.ThreadLocalRandom
-
-import apus.auth.UserAuthException
-import apus.session.auth.Mechanism
-
-import scala.concurrent.duration._
-
 import akka.actor._
-import akka.pattern.{ask, pipe}
-
-import apus.channel.{ToGroupMessage, ToUserMessage, SessionRegistered, RegisterSession}
-import apus.session.handlers.IqHandler
+import apus.auth.UserAuthException
+import apus.channel.{ToGroupMessage, ToUserMessage}
 import apus.protocol._
 import apus.server.ServerRuntime
-import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext}
+import apus.session.Session.UserAuthResult
+import apus.session.auth.Mechanism
+import apus.session.handlers.IqHandler
+import io.netty.channel.ChannelHandlerContext
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 import scala.xml.Elem
 
 /**
@@ -24,11 +18,10 @@ import scala.xml.Elem
  * Created by Hao Chen on 2014/11/17.
  */
 class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extends Actor
-  with ActorLogging with SessionHandler{
+  with ActorLogging with SessionHelper{
 
   import apus.session.SessionState._
-
-  implicit val ec = context.dispatcher
+  import context.dispatcher
 
   override val session: Session = this
 
@@ -52,7 +45,7 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
    * @param newState
    */
   private def become(newState: SessionState.Value): Unit ={
-    log.debug("becoming {}.", newState.toString)
+    log.debug("session {} is becoming {}", id, newState.toString)
     newState match {
       case INITIALIZED => context.become(initialized)
       case STARTED => context.become(started)
@@ -95,28 +88,37 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
   }
 
   private def handleAuth: Receive = {
-    case elem @ Elem(_, "auth", _, _, child) if elem.namespace == XmppNamespaces.SASL =>{
-
+    case elem @ Elem(_, "auth", _, _, child) if elem.namespace == XmppNamespaces.SASL => {
       Mechanism.decode(child.text, runtime.domain) match {
         case Some((jid, password)) =>
           setClientJid(jid)
           val f = runtime.userAuth.auth(jid, password)
+          val curSelf = self
+          //forward auth result to self
           f onComplete {
-            case Success(true) =>
-              reply(ServerResponses.authSuccess)
-              become(AUTHENTICATED)
-
-            case Success(false) =>
-            //todo reply
-
-            case Failure(e) if e.isInstanceOf[UserAuthException] =>
-              e.asInstanceOf[UserAuthException].resp.foreach {
-                reply
-              }
+            case t: _ => curSelf.tell(UserAuthResult(t), curSelf)
           }
 
         case None =>
           reply(ServerResponses.authFailureMalformedRequest)
+      }
+    }
+    case UserAuthResult(res) => {
+      res match {
+        case Success(true) =>
+          reply(ServerResponses.authSuccess)
+          become(AUTHENTICATED)
+
+        case Success(false) =>
+          //TODO reply
+
+        case Failure(e) if e.isInstanceOf[UserAuthException] =>
+          e.asInstanceOf[UserAuthException].resp.foreach {
+            reply
+          }
+
+        case Failure(e) =>
+          log.error(e, "unknown error when authenticating user")
       }
     }
   }
@@ -143,7 +145,7 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
   }
 
   def relayMessage(msg: Message): Unit ={
-    import MessageType._
+    import apus.protocol.MessageType._
     msg.typ match {
       case Chat | Normal => {
         var m = msg
@@ -154,7 +156,7 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
       }
       case GroupChat => {
         // from = ${groupId}@chat.apus.im/${fromId}
-        val from = msg.to.copy(resourceOpt = Some(clientJid.map(_.node).getOrElse("")))
+        val from = msg.to.copy(resourceOpt = Some(clientJid.map(_.node).get))
         val m = msg.copy(from = Some(from))
         router ! new ToGroupMessage(m)
       }
@@ -173,6 +175,9 @@ object Session {
   def props(ctx: ChannelHandlerContext, runtime: ServerRuntime): Props = {
     Props(classOf[Session], ctx, runtime)
   }
+
+  //actor messages
+  private case class UserAuthResult(res: Try[Boolean])
 }
 
 object SessionState extends Enumeration{

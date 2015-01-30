@@ -5,6 +5,7 @@ import apus.session.SessionState
 import scala.xml._
 
 /**
+ * Xmpp Responses
  * Created by Hao Chen on 2014/11/18.
  */
 object ServerResponses {

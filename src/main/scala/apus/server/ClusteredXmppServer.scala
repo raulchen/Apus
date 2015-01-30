@@ -23,7 +23,7 @@ class ClusteredXmppServer(override val config: Config) extends XmppServer{
       //we need to re-calculate hashing in a different way in the local router
       //to avoid hash code bias
       import com.github.kxbmap.configs._
-      val magic = 0x971e137b;
+      val magic = 0x971e137b
       val localRouterRehashing: ConsistentHashMapping = {
         case x: ConsistentHashable => (x.consistentHashKey, magic)
       }

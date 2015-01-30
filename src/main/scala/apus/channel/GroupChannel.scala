@@ -3,11 +3,14 @@ package apus.channel
 import akka.actor.Actor.Receive
 import akka.actor.{ActorRef, Props, ActorLogging, Actor}
 import apus.protocol.Jid
+import apus.server.ServerRuntime
 
 /**
  * Created by Hao Chen on 2015/1/15.
  */
-class GroupChannel(groupId: String, router: ActorRef) extends Actor with ActorLogging{
+class GroupChannel(groupId: String, runtime: ServerRuntime) extends Actor with ActorLogging{
+
+  val router = runtime.router
 
   override def receive: Receive = {
     case ToGroupMessage(msg) => {
@@ -21,7 +24,7 @@ class GroupChannel(groupId: String, router: ActorRef) extends Actor with ActorLo
 
 object GroupChannel {
 
-  def props(userId: String, router: ActorRef): Props = {
-    Props(classOf[GroupChannel], userId, router)
+  def props(userId: String, runtime: ServerRuntime): Props = {
+    Props(classOf[GroupChannel], userId, runtime)
   }
 }

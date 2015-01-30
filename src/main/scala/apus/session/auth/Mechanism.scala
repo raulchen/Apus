@@ -3,7 +3,7 @@ package apus.session.auth
 import java.util.Base64
 
 import apus.protocol.{ServerResponses, Jid}
-import apus.session.{SessionHandler, Session}
+import apus.session.{SessionHelper, Session}
 
 import scala.util.{Success, Try}
 
@@ -25,9 +25,9 @@ object Mechanism {
   }
 
   /**
-   *
+   * decode encoded auth info to (jid, password) pair
    * @param encoded encoded auth info
-   * @return Option of (jid, password) tuple
+   * @return Option of (jid, password) pair, None if the encoded string is malformed
    */
   def decode(encoded: String, domain: String): Option[(Jid, String)] = {
     val decoded = Base64.getDecoder.decode(encoded)

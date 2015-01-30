@@ -14,15 +14,16 @@ import scala.util.Try
 import scala.xml.Elem
 
 /**
+ * the trait for some helper classes for Session
  * Created by Hao Chen on 2014/11/25.
  */
-trait SessionHandler {
+trait SessionHelper {
 
   def session: Session
 
   /**
    * reply message to client
-   * @param msg
+   * @param msg msg for response
    * @return
    */
   def reply(msg: Elem): Future[Unit] = {
@@ -37,7 +38,7 @@ trait SessionHandler {
 
       override def operationComplete(future: ChannelFuture): Unit = {
         if(future.isSuccess){
-          promise.success()
+          promise.success(Unit)
         }
         else{
           promise.failure(future.cause())
@@ -62,7 +63,7 @@ trait SessionHandler {
    * @param completeCallback
    * @tparam U
    */
-  def registerToUserChannel[U](newJid: Jid, completeCallback: Try[Any] => U): Unit ={
+  def registerToUserChannel[U](newJid: Jid)(completeCallback: Try[Any] => U): Unit ={
     setClientJid(newJid)
 
     val router = session.runtime.router

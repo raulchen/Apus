@@ -34,12 +34,18 @@ trait ServerRuntime {
 
 object ServerRuntime{
 
+  /**
+   * construct a ServerRuntime instance from the config
+   * @param server
+   * @param config
+   * @return
+   */
   def fromConfig(server: XmppServer, config: Config) = {
-    new FromConfigServerRuntime(server, config)
+    new ConfiguredServerRuntime(server, config)
   }
 }
 
-class FromConfigServerRuntime(server: XmppServer, config: Config) extends ServerRuntime{
+class ConfiguredServerRuntime(server: XmppServer, config: Config) extends ServerRuntime{
 
   override val domain: String = config.getString("apus.server.domain")
 

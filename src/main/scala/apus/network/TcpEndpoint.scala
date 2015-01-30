@@ -26,7 +26,7 @@ import scala.util.control.NonFatal
  */
 class TcpEndpoint(port: Int, runtime: ServerRuntime) extends Endpoint{
 
-  val log = Logging(runtime.actorSystem(), this.getClass)
+  val log = Logging(runtime.actorSystem, this.getClass)
 
   val channelInitializer = new ChannelInitializer[SocketChannel]() {
 

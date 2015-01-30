@@ -2,7 +2,7 @@ package apus.session.handlers
 
 import apus.channel.SessionRegistered
 import apus.protocol.{ServerResponses, Iq, XmppNamespaces}
-import apus.session.{SessionHandler, Session}
+import apus.session.{SessionHelper, Session}
 import apus.util.UuidGenerator
 
 import scala.util.{Failure, Success}
@@ -12,7 +12,7 @@ import scala.xml.Elem
  * Handle Iq stanzas.
  * Created by Hao Chen on 2014/11/24.
  */
-class IqHandler(val session: Session) extends StanzaHandler[Iq] with SessionHandler{
+class IqHandler(val session: Session) extends StanzaHandler[Iq] with SessionHelper{
 
   import apus.protocol.IqType._
 
@@ -21,33 +21,32 @@ class IqHandler(val session: Session) extends StanzaHandler[Iq] with SessionHand
 
   override def handle(iq: Iq): Unit ={
     iq.typ match {
-      case Set => {
+      case Set =>
         handleSet(iq)
-      }
-      case _ => unhandled(iq)
+
+      case _ =>
+        unhandled(iq)
     }
 
   }
 
   private def handleSet(iq: Iq): Unit ={
     iq.xml.child.headOption.orNull match {
-      case bind @ Elem(_, "bind", _, _, _) if bind.namespace == XmppNamespaces.BIND => {
+      case bind @ Elem(_, "bind", _, _, _) if bind.namespace == XmppNamespaces.BIND =>
         val resourceId = nextResourceId()
         val newJid = session.clientJid.get.copy(resourceOpt = Some(resourceId))
 
-        registerToUserChannel(newJid, {
-          case Success(SessionRegistered) =>
+        registerToUserChannel(newJid){
+          case Success(_) =>
             reply(ServerResponses.bind(iq.id, session.clientJid.get))
 
-          case Success(_) => //ignore
-
           case Failure(e) =>
-            session.log.error(e, s"fail to register session for ${session.clientJid}")
-        })
-      }
-      case <session /> => {
+            session.log.error(e, s"failed to register session for ${session.clientJid}")
+        }
+
+      case <session /> =>
         reply(ServerResponses.session(iq.id, session.runtime.serverJid))
-      }
+
       case _ => unhandled(iq)
     }
   }

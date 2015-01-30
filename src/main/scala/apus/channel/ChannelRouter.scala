@@ -8,9 +8,9 @@ import apus.util.BiMap
 /**
  * Created by Hao Chen on 2014/11/26.
  */
-class ChannelRouter(val runtime: ServerRuntime) extends Actor{
+class ChannelRouter(runtime: ServerRuntime) extends Actor{
 
-  val router = runtime.router()
+  val router = runtime.router
 
   private def findUserChannel(userId: String): ActorRef = {
     val name = "u-" + userId

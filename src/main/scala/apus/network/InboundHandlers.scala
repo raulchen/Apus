@@ -67,7 +67,7 @@ class StreamHandler(runtime: ServerRuntime) extends SimpleChannelInboundHandler[
   val MaxBufSizeToTrim = 5 * 1024
   val MaxSizePerStanza = 20 * 1024
 
-  val log = Logging(runtime.actorSystem(), this.getClass)
+  val log = Logging(runtime.actorSystem, this.getClass)
 
   var depth = 0
   var buf = new ByteArrayOutputStream(InitialBufSize)
@@ -159,7 +159,7 @@ class StreamHandler(runtime: ServerRuntime) extends SimpleChannelInboundHandler[
 
 class InboundExceptionHandler(runtime: ServerRuntime) extends ChannelInboundHandlerAdapter{
 
-  val log = Logging(runtime.actorSystem(), this.getClass)
+  val log = Logging(runtime.actorSystem, this.getClass)
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
     cause match {
