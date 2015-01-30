@@ -139,7 +139,7 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
         case _ => log.warning("receive invalid stanza from [{}]: {}", clientJid, elem)
       }
     }
-    case ToUserMessage(_, msg) => {
+    case ToUserMessage(_, msg, _) => {
       reply(msg.xml)
     }
   }
@@ -152,13 +152,13 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
         if(m.fromOpt.isEmpty){
           m = m.copy(from = clientJid)
         }
-        router ! new ToUserMessage(msg.to.node, msg)
+        router ! new ToUserMessage(msg.to.node, msg, self)
       }
       case GroupChat => {
         // from = ${groupId}@chat.apus.im/${fromId}
         val from = msg.to.copy(resourceOpt = Some(clientJid.map(_.node).get))
         val m = msg.copy(from = Some(from))
-        router ! new ToGroupMessage(m)
+        router ! new ToGroupMessage(m, self)
       }
       case typ: MessageType.Value => {
         log.warning("unrecognized message type {}", typ)

@@ -13,10 +13,10 @@ class GroupChannel(groupId: String, runtime: ServerRuntime) extends Actor with A
   val router = runtime.router
 
   override def receive: Receive = {
-    case ToGroupMessage(msg) => {
+    case gm: ToGroupMessage => {
       List("1", "2", "3") foreach { userId =>
-        val m = msg.copy(to = Jid.parse(userId + "@apus.im"))
-        router ! ToUserMessage(userId, m)
+        val m = gm.stanza.copy(to = Jid.parse(userId + "@apus.im"))
+        router ! ToUserMessage(userId, m, gm.source)
       }
     }
   }

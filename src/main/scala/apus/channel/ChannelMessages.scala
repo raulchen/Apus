@@ -36,18 +36,38 @@ case class RegisterSession(session: ActorRef, userId: String) extends ToUserChan
 case object SessionRegistered
 
 /**
- * A wrapper of XMPP message that will be sent to a [[apus.channel.UserChannel]]
- * @param userId
- * @param msg
+ * A trait for actor messages that will be used for relaying xmpp message stanza
  */
-case class ToUserMessage(userId: String, msg: Message) extends ToUserChannel
+trait MessageStanzaRelay{
+
+  /**
+   * @return the message stanza to relay
+   */
+  def stanza: Message
+
+  /**
+   * @return the source Session from which the stanza comes from
+   */
+  def source: ActorRef
+}
+
+/**
+ * A wrapper of XMPP message that will be sent to a [[apus.channel.UserChannel]]
+ * @param userId the target user's id
+ * @param stanza the message stanza to relay
+ * @param source the source Session from which the stanza comes from
+ */
+case class ToUserMessage(userId: String, stanza: Message, source: ActorRef)
+  extends ToUserChannel with MessageStanzaRelay
 
 
 /**
  * A wrapper of XMPP message that will be sent to a [[apus.channel.GroupChannel]]
- * @param msg
+ * @param stanza the message stanza to relay
+ * @param source the source Session from which the stanza comes from
  */
-case class ToGroupMessage(msg: Message) extends ToGroupChannel{
+case class ToGroupMessage(stanza: Message, source: ActorRef)
+  extends ToGroupChannel with MessageStanzaRelay{
 
-  override def groupId = msg.to.node
+  override def groupId = stanza.to.node
 }
