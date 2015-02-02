@@ -11,7 +11,6 @@ import scala.xml.Elem
  */
 trait UserAuth {
 
-
   def auth(jid: Jid, password: String): Future[Boolean]
 }
 

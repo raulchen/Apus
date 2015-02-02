@@ -16,12 +16,17 @@ import scala.util.{Success, Failure}
  */
 class UserChannel(userId: String, runtime: ServerRuntime) extends Actor with ActorLogging{
 
-  import UserChannel._
   import context.dispatcher
 
   var sessions = Set.empty[ActorRef]
 
-  context.setReceiveTimeout(IdleTimeoutDuration)
+  val idleTimeout = {
+    import com.github.kxbmap.configs._
+    runtime.actorSystem.settings.config
+      .get[Duration]("apus.user-channel.idle-timeout")
+  }
+  println(idleTimeout)
+  context.setReceiveTimeout(idleTimeout)
 
   override def receive: Receive = {
     case RegisterSession(session, _) =>
@@ -67,8 +72,6 @@ class UserChannel(userId: String, runtime: ServerRuntime) extends Actor with Act
 }
 
 object UserChannel {
-
-  private val IdleTimeoutDuration = 1.minutes
 
   def props(userId: String, runtime: ServerRuntime): Props = {
     Props(classOf[UserChannel], userId, runtime)
