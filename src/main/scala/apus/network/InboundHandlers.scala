@@ -73,12 +73,11 @@ class StreamHandler(runtime: ServerRuntime) extends SimpleChannelInboundHandler[
   var buf = new ByteArrayOutputStream(InitialBufSize)
   var writer = xmlOutputFactory.createXMLEventWriter(buf)
 
-  var session: ActorRef = null
+  var session: ActorRef = _
 
   override def channelActive(ctx: ChannelHandlerContext): Unit = {
     ctx.writeAndFlush("""<?xml version="1.0" encoding="UTF-8"?>""")
-    //create session actor
-    session = runtime.actorSystem().actorOf(Session.props(ctx, runtime))
+    session = runtime.createSession(ctx)
   }
 
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {

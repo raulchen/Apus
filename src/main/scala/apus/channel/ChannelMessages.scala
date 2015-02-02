@@ -57,7 +57,7 @@ trait MessageStanzaRelay{
  * @param stanza the message stanza to relay
  * @param source the source Session from which the stanza comes from
  */
-case class ToUserMessage(userId: String, stanza: Message, source: ActorRef)
+case class UserMessage(userId: String, stanza: Message, source: ActorRef)
   extends ToUserChannel with MessageStanzaRelay
 
 
@@ -66,7 +66,7 @@ case class ToUserMessage(userId: String, stanza: Message, source: ActorRef)
  * @param stanza the message stanza to relay
  * @param source the source Session from which the stanza comes from
  */
-case class ToGroupMessage(stanza: Message, source: ActorRef)
+case class GroupMessage(stanza: Message, source: ActorRef)
   extends ToGroupChannel with MessageStanzaRelay{
 
   override def groupId = stanza.to.node

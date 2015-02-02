@@ -16,7 +16,7 @@ class ChannelRouter(runtime: ServerRuntime) extends Actor{
     val name = "u-" + userId
     context.child(name) match {
       case Some(child) => child
-      case None => context.actorOf(UserChannel.props(userId), name)
+      case None => context.actorOf(UserChannel.props(userId, runtime), name)
     }
   }
 
@@ -24,7 +24,7 @@ class ChannelRouter(runtime: ServerRuntime) extends Actor{
     val name = "g-" + groupId
     context.child(name) match {
       case Some(child) => child
-      case None => context.actorOf(GroupChannel.props(groupId, router), name)
+      case None => context.actorOf(GroupChannel.props(groupId, runtime), name)
     }
   }
 

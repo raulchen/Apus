@@ -1,16 +1,11 @@
 package apus.server
 
-import java.util.concurrent.ThreadLocalRandom
-
-import akka.actor.{ActorRef, Props, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.Logging
-import akka.routing.{FromConfig, ConsistentHashingPool}
-import apus.auth.{UserAuth, AnonymousUserAuth}
-import apus.channel.ChannelRouter
+import apus.auth.UserAuth
+import apus.dao._
 import apus.network.TcpEndpoint
 import com.typesafe.config.Config
-import io.netty.handler.ssl.SslContext
-import io.netty.handler.ssl.util.SelfSignedCertificate
 
 /*
  * Created by Hao Chen on 2014/11/17.
@@ -28,7 +23,7 @@ abstract class XmppServer{
 
   val router: ActorRef
 
-  val userAuth: UserAuth
+  val da: DataAccess
 
   val actorSystem = ActorSystem("apus", config)
 
@@ -48,3 +43,13 @@ abstract class XmppServer{
   }
 
 }
+
+trait DataAccess{
+
+  def userAuth: UserAuth
+
+  def messageDao: MessageDao
+
+  def groupDao: GroupDao
+}
+

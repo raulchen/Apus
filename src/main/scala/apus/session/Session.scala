@@ -2,7 +2,7 @@ package apus.session
 
 import akka.actor._
 import apus.auth.UserAuthException
-import apus.channel.{ToGroupMessage, ToUserMessage}
+import apus.channel.{GroupMessage, UserMessage}
 import apus.protocol._
 import apus.server.ServerRuntime
 import apus.session.Session.UserAuthResult
@@ -17,15 +17,13 @@ import scala.xml.Elem
  * The session actor.
  * Created by Hao Chen on 2014/11/17.
  */
-class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extends Actor
-  with ActorLogging with SessionHelper{
+class Session(val id: String, val runtime: ServerRuntime, val ctx: ChannelHandlerContext)
+  extends Actor with ActorLogging with SessionHelper{
 
   import apus.session.SessionState._
   import context.dispatcher
 
   override val session: Session = this
-
-  val id = runtime.nextSessionId
 
   var state = INITIALIZED
 
@@ -92,11 +90,11 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
       Mechanism.decode(child.text, runtime.domain) match {
         case Some((jid, password)) =>
           setClientJid(jid)
-          val f = runtime.userAuth.auth(jid, password)
+          val f = runtime.da.userAuth.auth(jid, password)
           val curSelf = self
           //forward auth result to self
           f onComplete {
-            case t: _ => curSelf.tell(UserAuthResult(t), curSelf)
+            t => curSelf.tell(UserAuthResult(t), curSelf)
           }
 
         case None =>
@@ -139,7 +137,7 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
         case _ => log.warning("receive invalid stanza from [{}]: {}", clientJid, elem)
       }
     }
-    case ToUserMessage(_, msg, _) => {
+    case UserMessage(_, msg, _) => {
       reply(msg.xml)
     }
   }
@@ -152,13 +150,13 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
         if(m.fromOpt.isEmpty){
           m = m.copy(from = clientJid)
         }
-        router ! new ToUserMessage(msg.to.node, msg, self)
+        router ! new UserMessage(msg.to.node, msg, self)
       }
       case GroupChat => {
         // from = ${groupId}@chat.apus.im/${fromId}
         val from = msg.to.copy(resourceOpt = Some(clientJid.map(_.node).get))
         val m = msg.copy(from = Some(from))
-        router ! new ToGroupMessage(m, self)
+        router ! new GroupMessage(m, self)
       }
       case typ: MessageType.Value => {
         log.warning("unrecognized message type {}", typ)
@@ -172,8 +170,8 @@ class Session(val ctx: ChannelHandlerContext, val runtime: ServerRuntime) extend
 
 object Session {
 
-  def props(ctx: ChannelHandlerContext, runtime: ServerRuntime): Props = {
-    Props(classOf[Session], ctx, runtime)
+  def props(id: String, runtime: ServerRuntime, ctx: ChannelHandlerContext): Props = {
+    Props(classOf[Session], id, runtime, ctx)
   }
 
   //actor messages

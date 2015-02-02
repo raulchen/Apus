@@ -14,7 +14,7 @@ class StandAloneXmppServer(override val config: Config) extends XmppServer{
 
   override val runtime: ServerRuntime = ServerRuntime.fromConfig(this, config)
 
-  override val userAuth: UserAuth = AnonymousUserAuth
+  override val da = MockDataAccess
 
   override val router: ActorRef = {
     actorSystem.actorOf(FromConfig.props(ChannelRouter.props(runtime)), "router")
