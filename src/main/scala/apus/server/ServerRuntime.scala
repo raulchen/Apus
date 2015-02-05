@@ -28,6 +28,8 @@ trait ServerRuntime {
 
   def actorSystem: ActorSystem
 
+  def config = actorSystem.settings.config
+
   def createSession(ctx: ChannelHandlerContext): ActorRef
 
   def router: ActorRef

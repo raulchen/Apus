@@ -5,8 +5,12 @@ import apus.dao.GroupMembers
 import apus.protocol.Jid
 import apus.server.ServerRuntime
 
-/**
+/*
  * Created by Hao Chen on 2015/1/15.
+ */
+
+/**
+ * A channel actor for handling a group's incoming messages
  */
 class GroupChannel(groupId: String, runtime: ServerRuntime) extends Actor with ActorLogging{
 

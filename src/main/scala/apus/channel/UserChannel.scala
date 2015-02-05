@@ -11,8 +11,12 @@ import akka.actor._
 
 import scala.util.{Success, Failure}
 
-/**
+/*
  * Created by Hao Chen on 2014/11/26.
+ */
+
+/**
+ * A channel actor for handling a user's incoming messages
  */
 class UserChannel(userId: String, runtime: ServerRuntime) extends Actor with ActorLogging{
 
@@ -22,10 +26,8 @@ class UserChannel(userId: String, runtime: ServerRuntime) extends Actor with Act
 
   val idleTimeout = {
     import com.github.kxbmap.configs._
-    runtime.actorSystem.settings.config
-      .get[Duration]("apus.user-channel.idle-timeout")
+    runtime.config.get[Duration]("apus.user-channel.idle-timeout")
   }
-  println(idleTimeout)
   context.setReceiveTimeout(idleTimeout)
 
   override def receive: Receive = {
@@ -51,6 +53,7 @@ class UserChannel(userId: String, runtime: ServerRuntime) extends Actor with Act
         case Success(r) => curSelf ! r
         case Failure(e) =>
           //TODO send feedback to msg.source
+          log.error(e, "failed to save msg: {}", msg)
       }
 
     case SavedUserMessage(msg) =>

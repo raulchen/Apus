@@ -10,6 +10,8 @@ jarName in assembly := "apus.jar"
 
 val akkaVersion = "2.3.6"
 
+val hbaseVersion = "0.98.1-hadoop1"
+
 val dependencies = Seq(
   //========= Scala
   "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
@@ -22,6 +24,9 @@ val dependencies = Seq(
   "com.fasterxml" % "aalto-xml" % "0.9.8",
   "org.fusesource" % "sigar" % "1.6.4",
   "ch.qos.logback" % "logback-classic" % "1.0.13",
+  "org.apache.hadoop" % "hadoop-core" % "1.2.1",
+  "org.apache.hbase" % "hbase-common" % hbaseVersion,
+  "org.apache.hbase" % "hbase-client" % hbaseVersion,
   //======== Test
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
   "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion
