@@ -53,7 +53,7 @@ class UserChannel(userId: String, runtime: ServerRuntime) extends Actor with Act
         case Success(r) => curSelf ! r
         case Failure(e) =>
           //TODO send feedback to msg.source
-          log.error(e, "failed to save msg: {}", msg)
+          log.error(e, "Failed to save UserMessage: {}", msg)
       }
 
     case SavedUserMessage(msg) =>

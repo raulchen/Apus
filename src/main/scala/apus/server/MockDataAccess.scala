@@ -1,7 +1,7 @@
 package apus.server
 
 import apus.auth.{AnonymousUserAuth, UserAuth}
-import apus.channel.UserMessage
+import apus.channel.{GroupMessage, UserMessage}
 import apus.dao._
 import apus.protocol.Jid
 
@@ -23,6 +23,10 @@ object MockMessageDao extends MessageDao {
 
   override def saveUserMessage(m: UserMessage): Future[SavedUserMessage] = {
     Future.successful(SavedUserMessage(m))
+  }
+
+  override def saveGroupMessage(m: GroupMessage): Future[SavedGroupMessage] = {
+    Future.successful(SavedGroupMessage(m))
   }
 }
 
