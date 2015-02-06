@@ -2,10 +2,7 @@ package apus.session.auth
 
 import java.util.Base64
 
-import apus.protocol.{ServerResponses, Jid}
-import apus.session.{SessionHelper, Session}
-
-import scala.util.{Success, Try}
+import apus.protocol.Jid
 
 /**
 * Created by Hao Chen on 2014/11/25.

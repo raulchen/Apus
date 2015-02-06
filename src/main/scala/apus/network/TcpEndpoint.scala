@@ -2,26 +2,16 @@ package apus.network
 
 import akka.event.Logging
 import apus.server.ServerRuntime
-
-import scala.collection.JavaConverters._
-import java.net.InetAddress
-
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel._
-import io.netty.channel.group.{DefaultChannelGroup, ChannelGroup}
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
-import io.netty.handler.codec.{LineBasedFrameDecoder, DelimiterBasedFrameDecoder, Delimiters}
-import io.netty.handler.codec.string.{StringDecoder, StringEncoder}
-import io.netty.handler.logging.{LogLevel, LoggingHandler}
-import io.netty.handler.ssl.{SslContext, SslHandler}
-import io.netty.handler.ssl.util.SelfSignedCertificate
-import io.netty.util.concurrent.{Future => NFuture, GlobalEventExecutor, GenericFutureListener}
+import io.netty.handler.codec.string.StringEncoder
 
 import scala.util.control.NonFatal
 
-/**
+/*
  * Created by Hao Chen on 2014/11/5.
  */
 class TcpEndpoint(port: Int, runtime: ServerRuntime) extends Endpoint{
@@ -62,7 +52,7 @@ class TcpEndpoint(port: Int, runtime: ServerRuntime) extends Endpoint{
     }
     catch {
       case NonFatal(e) => {
-        log.error(e, "Fail to start TCP endpoint.")
+        log.error(e, "Failed to start TCP endpoint.")
         shutdown()
       }
     }

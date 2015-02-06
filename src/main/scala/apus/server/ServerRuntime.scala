@@ -3,11 +3,8 @@ package apus.server
 import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{ActorRef, ActorSystem}
-import apus.auth.UserAuth
-import apus.dao.GroupDao
 import apus.protocol.Jid
 import apus.session.Session
-import apus.util.UuidGenerator
 import com.typesafe.config.Config
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.ssl.SslContext

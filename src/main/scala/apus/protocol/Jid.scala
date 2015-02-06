@@ -1,7 +1,5 @@
 package apus.protocol
 
-import scala.util.control.NonFatal
-
 /*
  * Created by Hao Chen on 2014/11/17.
  */

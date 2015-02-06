@@ -33,7 +33,7 @@ trait Stanza {
     XmlUtil.attr(xml, key)
   }
 
-  override def toString: String = xml.toString
+  override def toString: String = xml.toString()
 }
 
 /**

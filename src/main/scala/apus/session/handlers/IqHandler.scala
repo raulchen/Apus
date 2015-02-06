@@ -1,9 +1,7 @@
 package apus.session.handlers
 
-import apus.channel.SessionRegistered
-import apus.protocol.{ServerResponses, Iq, XmppNamespaces}
-import apus.session.{SessionHelper, Session}
-import apus.util.UuidGenerator
+import apus.protocol.{Iq, ServerResponses, XmppNamespaces}
+import apus.session.{Session, SessionHelper}
 
 import scala.util.{Failure, Success}
 import scala.xml.Elem

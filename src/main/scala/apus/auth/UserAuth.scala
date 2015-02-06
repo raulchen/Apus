@@ -5,9 +5,12 @@ import apus.protocol.Jid
 import scala.concurrent.Future
 import scala.xml.Elem
 
+/*
+ * Created by Hao Chen on 2014/11/25.
+ */
+
 /**
  * User authentication
- * Created by Hao Chen on 2014/11/25.
  */
 trait UserAuth {
 

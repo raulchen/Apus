@@ -1,9 +1,8 @@
 package apus.server
 
-import akka.actor.{Props, ActorRef}
-import akka.routing.ConsistentHashingRouter.{ConsistentHashable, ConsistentHashMapping}
+import akka.actor.ActorRef
+import akka.routing.ConsistentHashingRouter.{ConsistentHashMapping, ConsistentHashable}
 import akka.routing.{ConsistentHashingPool, FromConfig}
-import apus.auth.{AnonymousUserAuth, UserAuth}
 import apus.channel.ChannelRouter
 import com.typesafe.config.Config
 

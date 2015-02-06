@@ -1,15 +1,12 @@
 package apus.session
 
+import akka.pattern.ask
+import apus.channel.RegisterSession
+import apus.protocol.Jid
 import io.netty.channel.{ChannelFuture, ChannelFutureListener}
 
-import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
-
-import akka.pattern.ask
-
-import apus.channel.{SessionRegistered, RegisterSession}
-import apus.protocol.Jid
-
+import scala.concurrent.{Future, Promise}
 import scala.util.Try
 import scala.xml.Elem
 

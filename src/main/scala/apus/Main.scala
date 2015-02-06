@@ -7,7 +7,7 @@ import com.typesafe.config.ConfigFactory
 
 import scala.io.StdIn
 
-/**
+/*
  * Created by Hao Chen on 2014/11/5.
  */
 object Main {

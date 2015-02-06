@@ -1,7 +1,6 @@
 package apus.util
 
 import java.io.InputStream
-import javax.xml.parsers.SAXParserFactory
 
 import scala.xml.{Elem, SAXParser}
 import scala.xml.factory.XMLLoader

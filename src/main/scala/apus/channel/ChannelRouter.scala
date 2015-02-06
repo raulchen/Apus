@@ -5,8 +5,12 @@ import akka.actor.Actor.Receive
 import apus.server.ServerRuntime
 import apus.util.BiMap
 
-/**
+/*
  * Created by Hao Chen on 2014/11/26.
+ */
+
+/*
+ * Route messages to corresponding UserChannel/GroupChannel
  */
 class ChannelRouter(runtime: ServerRuntime) extends Actor{
 

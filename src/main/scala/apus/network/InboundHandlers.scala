@@ -8,7 +8,6 @@ import akka.actor.{PoisonPill, ActorRef}
 import akka.event.Logging
 import apus.protocol.{StreamStart, XmppNamespaces}
 import apus.server.ServerRuntime
-import apus.session.Session
 import apus.util.Xml
 import com.fasterxml.aalto.evt.EventAllocatorImpl
 import com.fasterxml.aalto.stax.{InputFactoryImpl, OutputFactoryImpl}
@@ -51,9 +50,8 @@ class XmlFrameDecoder extends ByteToMessageDecoder{
 }
 
 
-
-private object StreamHandler{
-  val xmlOutputFactory = new OutputFactoryImpl
+object StreamHandler{
+  private val xmlOutputFactory = new OutputFactoryImpl
 }
 
 /**
@@ -90,10 +88,15 @@ class StreamHandler(runtime: ServerRuntime) extends SimpleChannelInboundHandler[
       val namespace = event.getNamespaceURI("")
       if(XmppNamespaces.SERVER == namespace ||
           XmppNamespaces.CLIENT == namespace){
-        return true
+        true
+      }
+      else{
+        false
       }
     }
-    return false
+    else {
+      false
+    }
   }
 
   private def emit(msg: AnyRef): Unit = {
@@ -127,7 +130,7 @@ class StreamHandler(runtime: ServerRuntime) extends SimpleChannelInboundHandler[
         emit(StreamStart)
       }
       else{
-        depth+=1
+        depth += 1
         writer.add(event)
         if(buf.size > MaxSizePerStanza){
           throw new IOException(s"Stanza too large: ${buf.size}")
@@ -135,14 +138,14 @@ class StreamHandler(runtime: ServerRuntime) extends SimpleChannelInboundHandler[
       }
     }
     else if(event.isEndElement){
-      depth-=1
-      if(depth==0){
+      depth -= 1
+      if(depth == 0){
         //end stream
         ctx.close()
       }
       else{
         writer.add(event)
-        if(depth==1){
+        if(depth == 1){
           //emit stanza
           emit(endElem())
         }
@@ -163,7 +166,7 @@ class InboundExceptionHandler(runtime: ServerRuntime) extends ChannelInboundHand
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
     cause match {
       case e: WFCException => {
-        log.warning("invalid xml format from client")
+        log.warning("Invalid xml format from client")
         ctx.close()
       }
       case e: IOException => {

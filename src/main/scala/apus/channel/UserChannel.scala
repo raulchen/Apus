@@ -42,7 +42,7 @@ class UserChannel(userId: String, runtime: ServerRuntime) extends Actor with Act
 
     case ReceiveTimeout =>
       if(sessions.size == 0){
-        log.debug("idle timeout, channel stops")
+        log.debug("Idle timeout, channel stopped")
         context.stop(self)
       }
 
