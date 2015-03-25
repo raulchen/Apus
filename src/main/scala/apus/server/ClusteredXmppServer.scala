@@ -1,9 +1,12 @@
 package apus.server
 
-import akka.actor.ActorRef
+import akka.actor.{Address, ActorLogging, Actor, ActorRef}
+import akka.cluster.Cluster
+import akka.cluster.ClusterEvent.{MemberUp, InitialStateAsEvents}
 import akka.routing.ConsistentHashingRouter.{ConsistentHashMapping, ConsistentHashable}
-import akka.routing.{ConsistentHashingPool, FromConfig}
+import akka.routing.{Broadcast, ConsistentHashingPool, FromConfig}
 import apus.channel.ChannelRouter
+import apus.cluster.ClusterListener
 import com.typesafe.config.Config
 
 /**
@@ -16,8 +19,7 @@ class ClusteredXmppServer(override val config: Config) extends XmppServer{
 
   override val da = MockDataAccess
 
-  override val router: ActorRef = {
-
+  val localRouter: ActorRef = {
     val localRouterProps = {
       //we need to re-calculate hashing in a different way in the local router
       //to avoid hash code bias
@@ -34,7 +36,11 @@ class ClusteredXmppServer(override val config: Config) extends XmppServer{
     }
 
     actorSystem.actorOf(localRouterProps, "localRouter")
-//    actorSystem.actorOf(Props[UserChannelRouter], "localRouter")
-    actorSystem.actorOf(FromConfig.props(), "router")
   }
+
+  override val router: ActorRef = actorSystem.actorOf(FromConfig.props(), "router")
+
+  val clusterListener = actorSystem.actorOf(ClusterListener.props(runtime, localRouter))
 }
+
+

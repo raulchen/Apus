@@ -2,7 +2,7 @@ package apus.session
 
 import akka.actor._
 import apus.auth.UserAuthException
-import apus.channel.{GroupMessage, UserMessage}
+import apus.channel.{SessionRegistered, GroupMessage, UserMessage}
 import apus.protocol._
 import apus.server.ServerRuntime
 import apus.session.Session.UserAuthResult
@@ -139,6 +139,17 @@ class Session(val id: String, val runtime: ServerRuntime, val ctx: ChannelHandle
     }
     case UserMessage(_, msg, _) => {
       reply(msg.xml)
+    }
+    case Terminated(userChannelRef) => {
+      registerToUserChannel(clientJid.get){
+        case Success(SessionRegistered(userChannel)) =>
+          session.context.watch(userChannel)
+
+        case Failure(e) =>
+          session.log.error(e, s"failed to register session for ${session.clientJid}")
+
+        case _ =>
+      }
     }
   }
 

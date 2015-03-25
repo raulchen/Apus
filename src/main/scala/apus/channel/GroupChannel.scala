@@ -37,7 +37,8 @@ class GroupChannel(groupId: String, runtime: ServerRuntime) extends Actor with A
       buffer foreach relay
       buffer = Nil
       context.become(ready)
-      log.debug("Group {] initialized", groupId)
+      log.debug("GroupChannel {] initialized", groupId)
+      //todo set ReceiveTimeout
 
     case m: GroupMessage =>
       //TODO check buffer size

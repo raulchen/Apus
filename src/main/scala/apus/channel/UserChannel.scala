@@ -1,5 +1,6 @@
 package apus.channel
 
+import apus.cluster.{CheckUserChannelRelocation, NewNodeUp}
 import apus.dao.SavedUserMessage
 import apus.protocol.Message
 import apus.server.ServerRuntime
@@ -31,11 +32,14 @@ class UserChannel(userId: String, runtime: ServerRuntime) extends Actor with Act
   context.setReceiveTimeout(idleTimeout)
 
   override def receive: Receive = {
+    case NewNodeUp =>
+      runtime.router ! CheckUserChannelRelocation(userId, self)
+
     case RegisterSession(session, _) =>
 //      println(session)
       sessions += session
       context.watch(session)
-      sender ! SessionRegistered
+      sender ! SessionRegistered(self)
 
     case Terminated(session) =>
       sessions -= session

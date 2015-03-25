@@ -1,5 +1,6 @@
 package apus.session.handlers
 
+import apus.channel.SessionRegistered
 import apus.protocol.{Iq, ServerResponses, XmppNamespaces}
 import apus.session.{Session, SessionHelper}
 
@@ -35,11 +36,14 @@ class IqHandler(val session: Session) extends StanzaHandler[Iq] with SessionHelp
         val newJid = session.clientJid.get.copy(resourceOpt = Some(resourceId))
 
         registerToUserChannel(newJid){
-          case Success(_) =>
+          case Success(SessionRegistered(userChannel)) =>
+            session.context.watch(userChannel)
             reply(ServerResponses.bind(iq.id, session.clientJid.get))
 
           case Failure(e) =>
             session.log.error(e, s"failed to register session for ${session.clientJid}")
+
+          case _ =>
         }
 
       case <session /> =>

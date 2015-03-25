@@ -2,6 +2,8 @@ package apus.channel
 
 import akka.actor._
 import akka.actor.Actor.Receive
+import akka.cluster.Cluster
+import apus.cluster.{CheckUserChannelRelocation, NewNodeUp}
 import apus.server.ServerRuntime
 import apus.util.BiMap
 
@@ -38,6 +40,17 @@ class ChannelRouter(runtime: ServerRuntime) extends Actor{
 
     case x: ToGroupChannel =>
       findGroupChannel(x.groupId).forward(x)
+
+    case NewNodeUp =>
+      context.actorSelection("u-*").forward(NewNodeUp)
+
+    case CheckUserChannelRelocation(_, prevUserChannel) =>
+      val address = prevUserChannel.path.address
+      println(address)
+      if (address.hasGlobalScope) {
+        //if it's a remote address
+        prevUserChannel ! PoisonPill
+      }
   }
 }
 

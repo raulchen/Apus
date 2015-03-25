@@ -33,7 +33,7 @@ trait ToGroupChannel extends ConsistentHashable{
  */
 case class RegisterSession(session: ActorRef, userId: String) extends ToUserChannel
 
-case object SessionRegistered
+case class SessionRegistered(userChannel: ActorRef)
 
 /**
  * A trait for actor messages that will be used for relaying xmpp message stanza
